@@ -1,0 +1,20 @@
+{
+  "name": "@storeforge/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "echo \"@storeforge/config: nothing to typecheck (plain JS/JSON)\"",
+    "test": "vitest run",
+    "build": "echo \"@storeforge/config: no build step\""
+  },
+  "dependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "typescript-eslint": "^8.18.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0"
+  }
+}
