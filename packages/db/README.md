@@ -37,7 +37,16 @@ guardrail an AI agent making unsupervised schema changes depends on.
 
 ## Core entities
 
-`Product`, `Customer`, `Order`, `OrderItem`. `Order.gatewayOrderId` is
-unique at the database level -- it is the same key `packages/payments`
-webhook handler uses to guarantee idempotency, so a duplicate can't slip in
-even if application logic has a bug.
+`Product`, `ProductVariant`, `ProductImage`, `Collection`, `Customer`,
+`Order`, `OrderItem`. `Order.gatewayOrderId` is unique at the database
+level -- it is the same key `packages/payments`' webhook handler uses to
+guarantee idempotency, so a duplicate can't slip in even if application
+logic has a bug.
+
+`ProductVariant` and `ProductImage` were added while onboarding the first
+real client (a catalog with real size variants and multi-image galleries)
+-- both fields are optional/empty-by-default, so a product with neither
+still behaves exactly like the original single-variant, single-image
+shape. `OrderItem.variantId` is nullable for the same reason.
+`Collection` is a plain name + product list; anything more specific than
+that belongs in a storefront's own app, not here.

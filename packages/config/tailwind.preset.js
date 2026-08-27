@@ -25,6 +25,9 @@ const preset = {
       },
       fontFamily: {
         sans: ["var(--sf-font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        // Falls back to the body font for a storefront that doesn't set a
+        // distinct heading face.
+        heading: ["var(--sf-font-heading, var(--sf-font-sans))", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       borderRadius: {
         DEFAULT: "var(--sf-radius, 0.5rem)",

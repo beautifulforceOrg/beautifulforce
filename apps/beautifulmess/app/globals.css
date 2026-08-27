@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: var(--sf-color-background);
+  color: var(--sf-color-foreground);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--sf-font-heading, var(--sf-font-sans));
+}

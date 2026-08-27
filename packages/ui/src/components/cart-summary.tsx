@@ -6,6 +6,10 @@ export interface CartLine {
   name: string;
   price: number;
   quantity: number;
+  // A selected option's label (a size, a denomination, ...), shown under
+  // the name when a storefront's product has variants. Optional so a
+  // single-variant catalog's lines look exactly as before.
+  variantLabel?: string;
 }
 
 export function CartItem({
@@ -23,6 +27,7 @@ export function CartItem({
     <div className="flex items-center justify-between gap-4 border-b border-border py-3 text-foreground">
       <div>
         <p className="font-medium">{line.name}</p>
+        {line.variantLabel ? <p className="text-muted text-sm">{line.variantLabel}</p> : null}
         <p className="text-muted text-sm">{formatPrice(line.price)} each</p>
       </div>
       <div className="flex items-center gap-2">

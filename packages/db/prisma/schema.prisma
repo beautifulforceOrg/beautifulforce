@@ -17,13 +17,52 @@ datasource db {
 }
 
 model Product {
-  id        String      @id @default(cuid())
-  slug      String      @unique
-  name      String
-  price     Int // smallest currency unit (paise), matches packages/payments pricing helpers
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String? // raw HTML, as most storefront-builder exports (e.g. Shopify's) provide it
+  price       Int // smallest currency unit (paise), matches packages/payments pricing helpers
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+  variants    ProductVariant[]
+  images      ProductImage[]
+  collections Collection[] @relation("CollectionToProduct")
+}
+
+// A product's purchasable options (size, denomination, ...). Not every
+// product has variants -- one with none is sold as itself, matching the
+// original single-variant Product shape this extends.
+model ProductVariant {
+  id         String      @id @default(cuid())
+  productId  String
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name       String // the option name, e.g. "Size" or "Denomination"
+  value      String // the option value, e.g. "5-6 years" or "₹5000"
+  sku        String?
+  price      Int? // overrides Product.price when set (a variant-specific price)
   orderItems OrderItem[]
+
+  @@unique([productId, name, value])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  position  Int     @default(0)
+  altText   String?
+}
+
+// A storefront's own catalog grouping (its Shopify collections, a
+// boutique's categories, ...) -- deliberately just a name and a product
+// list, since anything more specific belongs in that storefront's own app.
+model Collection {
+  id       String    @id @default(cuid())
+  slug     String    @unique
+  name     String
+  products Product[] @relation("CollectionToProduct")
 }
 
 model Customer {
@@ -53,10 +92,12 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
+  id        String          @id @default(cuid())
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product         @relation(fields: [productId], references: [id])
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
   quantity  Int
 }

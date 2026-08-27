@@ -15,6 +15,10 @@ export interface StorefrontTheme {
   colorMuted: string;
   colorBorder: string;
   fontSans: string;
+  // Many brands set a distinct display/heading face apart from body text
+  // (a serif heading over a sans body, for instance) -- optional so a
+  // single-font storefront can omit it and fall back to fontSans.
+  fontHeading?: string;
   radius?: string;
   logo?: ReactNode;
 }
@@ -27,6 +31,7 @@ const CSS_VAR_NAME: Record<keyof Omit<StorefrontTheme, "logo">, string> = {
   colorMuted: "--sf-color-muted",
   colorBorder: "--sf-color-border",
   fontSans: "--sf-font-sans",
+  fontHeading: "--sf-font-heading",
   radius: "--sf-radius",
 };
 

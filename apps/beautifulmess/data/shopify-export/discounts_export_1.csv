@@ -1,0 +1,2 @@
+Name,Value,Value Type,Type,Discount Class,Minimum Purchase Requirements,Combines with Order Discounts,Combines with Product Discounts,Combines with Shipping Discounts,Customer Selection,Context,Times Used In Total,Applies Once Per Customer,Usage Limit Per Code,Status,Start,End
+MESS05,-5.0,percentage,Amount Off,order,,,,,prerequisite,segment,0,,,Active,2026-07-10 16:00:46 +0530,

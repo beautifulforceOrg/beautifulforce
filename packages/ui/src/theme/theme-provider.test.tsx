@@ -36,6 +36,18 @@ describe("ThemeProvider", () => {
     expect(root.style.getPropertyValue("--sf-font-sans")).toBe(themeA.fontSans);
   });
 
+  it("injects a distinct heading font when a storefront sets a heading/body pair", () => {
+    const { container } = render(
+      <ThemeProvider theme={{ ...themeA, fontHeading: "'Cormorant', serif" }}>
+        <p>Storefront with a heading/body font pair</p>
+      </ThemeProvider>
+    );
+
+    const root = container.querySelector("[data-storefront-theme]") as HTMLElement;
+    expect(root.style.getPropertyValue("--sf-font-heading")).toBe("'Cormorant', serif");
+    expect(root.style.getPropertyValue("--sf-font-sans")).toBe(themeA.fontSans);
+  });
+
   it("injects a completely different theme B's values, with nothing hardcoded", () => {
     const { container } = render(
       <ThemeProvider theme={themeB}>

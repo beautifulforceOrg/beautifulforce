@@ -10,6 +10,7 @@ comes from a storefront through `ThemeProvider`.
 - `ProductCard`, `ProductGrid` -- catalog browsing
 - `CartItem`, `CartSummary` -- cart with quantity controls and a computed subtotal
 - `CheckoutSteps` -- a step indicator for browse → cart → checkout → confirmation
+- `VariantPicker` -- a radio-group option selector (size, denomination, ...) for a product with variants
 - `ThemeProvider` -- injects a storefront's theme as CSS variables
 
 ## Theming contract
@@ -28,13 +29,14 @@ import { ThemeProvider } from "@storeforge/ui";
     colorMuted: "#6B7280",
     colorBorder: "#E5E7EB",
     fontSans: "'Fraunces', serif",
+    fontHeading: "'Cormorant', serif", // optional -- a storefront with one font can omit this
   }}
 >
   <App />
 </ThemeProvider>
 ```
 
-This sets `--sf-color-brand`, `--sf-font-sans`, etc. on a wrapping element --
+This sets `--sf-color-brand`, `--sf-font-sans`, `--sf-font-heading`, etc. on a wrapping element --
 the same variable names `packages/config/tailwind.preset.js` maps Tailwind's
 `bg-brand`, `font-sans`, and friends onto. Swapping the theme object is the
 entire branding surface; no component file ever needs to change.

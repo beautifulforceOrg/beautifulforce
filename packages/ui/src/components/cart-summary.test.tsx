@@ -37,4 +37,14 @@ describe("CartSummary", () => {
 
     expect(onRemove).toHaveBeenCalledWith("p1");
   });
+
+  it("shows a selected variant's label under the product name", () => {
+    render(
+      <CartSummary
+        lines={[{ productId: "p1", name: "Frock", price: 5500, quantity: 1, variantLabel: "5-6 years" }]}
+      />
+    );
+
+    expect(screen.getByText("5-6 years")).toBeInTheDocument();
+  });
 });
