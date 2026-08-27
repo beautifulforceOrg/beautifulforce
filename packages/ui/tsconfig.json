@@ -1,7 +1,9 @@
 {
   "extends": "@storeforge/config/tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["@testing-library/jest-dom"],
     "outDir": "dist"
   },
   "include": ["src"]

@@ -1,3 +1,7 @@
-// Placeholder entry point. Phase 3 replaces this with the real component exports
-// (cart, checkout steps, product grid, primitives).
-export const PACKAGE_NAME = "@storeforge/ui";
+export { Button, buttonVariants, type ButtonProps } from "./components/button";
+export { ProductCard, ProductGrid, type Product } from "./components/product-grid";
+export { CartItem, CartSummary, type CartLine } from "./components/cart-summary";
+export { CheckoutSteps } from "./components/checkout-steps";
+export { ThemeProvider, themeToCssVariables, type StorefrontTheme } from "./theme/theme-provider";
+export { formatPrice } from "./lib/format-price";
+export { cn } from "./lib/cn";
