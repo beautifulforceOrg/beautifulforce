@@ -8,7 +8,10 @@ tested core (`packages/*`). See `storeforge-design-plan.md` and
 
 - Every new feature: write a failing test first, then implement.
 - Never mark a task complete without running:
-  `pnpm turbo run typecheck test test:e2e --filter=...[origin/main]`
+  `pnpm turbo run typecheck test test:e2e`
+  (CI scopes this to `--filter=...[origin/<base-branch>]` on a pull request
+  for speed -- see `.github/workflows/ci.yml` -- but locally, without a
+  guaranteed remote to diff against, run the full suite.)
 - Payment webhook handlers (`packages/payments`) must have an idempotency
   test — a duplicate delivered event must never create a duplicate order.
 - Never use `$queryRawUnsafe` with interpolated input, or

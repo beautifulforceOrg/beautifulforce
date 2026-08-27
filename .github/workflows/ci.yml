@@ -38,10 +38,23 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm turbo run lint --filter=...[origin/main]
-      - run: pnpm turbo run typecheck --filter=...[origin/main]
-      - run: pnpm turbo run test --filter=...[origin/main]
-      - run: pnpm turbo run test:e2e --filter=...[origin/main]
+      # On a pull request, scope to what changed relative to the PR's base
+      # branch so CI stays fast as more storefronts are added. On a direct
+      # push to main, origin/main *is* the current commit -- filtering
+      # against it would silently select nothing, so run everything instead.
+      - name: Determine turbo filter
+        id: turbo-filter
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "args=--filter=...[origin/${{ github.base_ref }}]" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: pnpm turbo run lint ${{ steps.turbo-filter.outputs.args }}
+      - run: pnpm turbo run typecheck ${{ steps.turbo-filter.outputs.args }}
+      - run: pnpm turbo run test ${{ steps.turbo-filter.outputs.args }}
+      - run: pnpm turbo run test:e2e ${{ steps.turbo-filter.outputs.args }}
 
       - name: Scan for committed secrets
         uses: gitleaks/gitleaks-action@v2
