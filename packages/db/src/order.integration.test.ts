@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "./client";
 
+// Scoped to this file's own fixture slugs/emails/ids -- other packages'
+// integration tests and apps/_template's seed data ("Sample Item") share
+// this same local Postgres, and an unscoped deleteMany() here previously
+// wiped their rows out from under them when tests ran concurrently.
+const OWNED_SLUGS = ["item-1", "item-2"];
+const OWNED_EMAIL = "shopper@example.com";
+const OWNED_GATEWAY_ORDER_ID = "db_test_order_1";
+
 beforeEach(async () => {
-  await db.orderItem.deleteMany();
-  await db.order.deleteMany();
-  await db.product.deleteMany();
-  await db.customer.deleteMany();
+  await db.orderItem.deleteMany({ where: { product: { slug: { in: OWNED_SLUGS } } } });
+  await db.order.deleteMany({ where: { gatewayOrderId: OWNED_GATEWAY_ORDER_ID } });
+  await db.product.deleteMany({ where: { slug: { in: OWNED_SLUGS } } });
+  await db.customer.deleteMany({ where: { email: OWNED_EMAIL } });
 });
 
 describe("core schema (real Postgres, no mocked Prisma client)", () => {
@@ -38,10 +46,10 @@ describe("core schema (real Postgres, no mocked Prisma client)", () => {
   });
 
   it("enforces one order per gateway order id at the database level", async () => {
-    await db.order.create({ data: { gatewayOrderId: "order_1" } });
+    await db.order.create({ data: { gatewayOrderId: OWNED_GATEWAY_ORDER_ID } });
 
     await expect(
-      db.order.create({ data: { gatewayOrderId: "order_1" } })
+      db.order.create({ data: { gatewayOrderId: OWNED_GATEWAY_ORDER_ID } })
     ).rejects.toThrow();
   });
 

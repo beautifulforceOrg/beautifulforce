@@ -42,6 +42,13 @@
     },
     "@storeforge/shipping#typecheck": {
       "dependsOn": ["^build", "@storeforge/db#db:generate"]
+    },
+    "@storeforge/template-storefront#typecheck": {
+      "dependsOn": ["^build", "@storeforge/db#db:generate"]
+    },
+    "@storeforge/template-storefront#test:e2e": {
+      "dependsOn": ["^build", "@storeforge/db#db:push"],
+      "cache": false
     }
   }
 }

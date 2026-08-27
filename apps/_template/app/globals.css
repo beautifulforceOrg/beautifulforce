@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: var(--sf-color-background);
+  color: var(--sf-color-foreground);
+}
