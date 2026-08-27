@@ -37,3 +37,44 @@ tested core (`packages/*`). See `storeforge-design-plan.md` and
 Each storefront has its own database, domain, Vercel project, and
 credentials — never shared with another storefront. Only code in
 `packages/` is shared.
+
+## Architecture diagrams -- keep them current
+
+`docs/architecture.md` is the source of truth for how code flows through
+this monorepo: a high-level system diagram, the package dependency graph,
+the purchase-flow sequence, and one diagram per package/app (schema,
+theming, webhook idempotency, status mapping, the catalog import
+pipeline, CI). It is also published as an Artifact for easier browsing:
+
+**Storeforge Architecture** — https://claude.ai/code/artifact/8a021a1c-ca11-49f5-859e-273974119246
+
+**Whenever a change alters something a diagram depicts**, update both
+before considering the task done:
+
+- A new package or app, or a new dependency between existing ones →
+  diagrams 1–2
+- A change to the checkout/payment/fulfillment flow, or to which webhook
+  composition an app uses → diagram 3
+- A `packages/db` schema change → diagram 4
+- A `packages/ui` theming-contract change → diagram 5
+- A change to `packages/payments`' or `packages/shipping`'s webhook logic
+  → diagrams 6–7
+- A change to how `apps/beautifulmess` (or a future client app) imports
+  its catalog → diagram 8
+- A CI pipeline change → diagram 9
+
+To update:
+
+1. Edit the Mermaid source in `docs/architecture.md` directly.
+2. Copy the same Mermaid block(s) into the matching `<pre class="mermaid">`
+   section of the artifact's HTML source (currently authored at
+   `/private/tmp/claude-502/-Users-satish-code-src-beautifulforce/bee8ddb1-221c-4942-a0ee-ddd1078afd71/scratchpad/storeforge-architecture.html`
+   in the session that published it -- if that path is gone, use
+   `Artifact` with `action: "read"` on the URL above to recover the
+   current HTML, edit it, and save it to a new local file first).
+3. Republish with `Artifact`, passing the URL above as `url` so it updates
+   in place rather than creating a new artifact.
+
+A new diagram (a new package, a new kind of flow) gets a new numbered
+section in both places, plus a `<a class="navlink">` entry in the
+artifact's nav and a wakeup in this file's list above.
