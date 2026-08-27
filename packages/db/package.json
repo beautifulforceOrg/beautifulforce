@@ -6,13 +6,31 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down -v",
+    "db:generate": "prisma generate --schema=prisma/schema.prisma",
+    "db:push": "dotenv -e .env.test -- prisma db push --schema=prisma/schema.prisma --skip-generate",
+    "db:migrate:dev": "dotenv -e .env.test -- prisma migrate dev --schema=prisma/schema.prisma",
+    "db:seed": "dotenv -e .env.test -- prisma db seed",
     "lint": "eslint .",
+    "pretypecheck": "pnpm run db:generate",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "build": "echo \"@storeforge/db: no build step yet\""
+    "pretest": "pnpm run db:generate && pnpm run db:push",
+    "test": "dotenv -e .env.test -- vitest run",
+    "build": "prisma generate --schema=prisma/schema.prisma"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
   },
   "devDependencies": {
     "@storeforge/config": "workspace:*",
+    "@types/node": "^22.10.0",
+    "dotenv-cli": "^7.4.4",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"
   }

@@ -1,0 +1,62 @@
+// Storeforge core schema template.
+//
+// This is not a shared database -- every storefront copies this schema into
+// its own isolated Neon instance and extends it with client-specific fields
+// or models locally. Changes here that benefit every storefront (a new
+// core field, a fixed relation) should still land here first and be
+// re-copied outward; one-off client fields belong in that client's own
+// copy, never merged back.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id        String      @id @default(cuid())
+  slug      String      @unique
+  name      String
+  price     Int // smallest currency unit (paise), matches packages/payments pricing helpers
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  orderItems OrderItem[]
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FULFILLED
+  CANCELLED
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  customerId     String?
+  customer       Customer?   @relation(fields: [customerId], references: [id])
+  gatewayOrderId String?     @unique // Razorpay order id -- the webhook idempotency key
+  status         OrderStatus @default(PENDING)
+  items          OrderItem[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+}
