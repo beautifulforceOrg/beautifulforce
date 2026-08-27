@@ -8,11 +8,17 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "dotenv -e .env.test -- vitest run",
     "build": "echo \"@storeforge/shipping: no build step yet\""
+  },
+  "dependencies": {
+    "@storeforge/db": "workspace:*"
   },
   "devDependencies": {
     "@storeforge/config": "workspace:*",
+    "@types/node": "^22.10.0",
+    "dotenv-cli": "^7.4.4",
+    "msw": "^2.6.6",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"
   }

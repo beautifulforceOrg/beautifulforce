@@ -35,6 +35,13 @@
     },
     "@storeforge/payments#typecheck": {
       "dependsOn": ["^build", "@storeforge/db#db:generate"]
+    },
+    "@storeforge/shipping#test": {
+      "dependsOn": ["^build", "@storeforge/db#db:push"],
+      "outputs": ["coverage/**"]
+    },
+    "@storeforge/shipping#typecheck": {
+      "dependsOn": ["^build", "@storeforge/db#db:generate"]
     }
   }
 }

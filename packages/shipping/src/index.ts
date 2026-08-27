@@ -1,3 +1,14 @@
-// Placeholder entry point. Phase 5 replaces this with the Shiprocket
-// integration behind a courier-agnostic interface.
-export const PACKAGE_NAME = "@storeforge/shipping";
+export type {
+  CreateShipmentInput,
+  Shipment,
+  ShipmentLineItem,
+  ShippingProvider,
+  ShipToAddress,
+  TrackingUpdate,
+} from "./shipping-provider";
+export {
+  createShiprocketProvider,
+  createShiprocketProviderFromEnv,
+  type ShiprocketCredentials,
+} from "./shiprocket-provider";
+export { POST, applyCourierStatus, type ShiprocketWebhookPayload } from "./webhook";
