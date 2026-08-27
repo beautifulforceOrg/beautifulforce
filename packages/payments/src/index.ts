@@ -1,3 +1,14 @@
-// Placeholder entry point. Phase 4 replaces this with the Razorpay
-// integration, pricing helpers, and the webhook idempotency handler.
-export const PACKAGE_NAME = "@storeforge/payments";
+export { calculateCartTotal, type CartLineInput } from "./pricing";
+export {
+  createRazorpayOrder,
+  createRazorpayOrderFromEnv,
+  type CreateOrderInput,
+  type RazorpayCredentials,
+  type RazorpayOrder,
+} from "./razorpay-client";
+export {
+  POST,
+  handlePaymentCaptured,
+  verifyRazorpaySignature,
+  type RazorpayWebhookPayload,
+} from "./webhook";

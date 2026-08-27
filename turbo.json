@@ -22,6 +22,19 @@
     },
     "test:e2e": {
       "dependsOn": ["build"]
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "@storeforge/payments#test": {
+      "dependsOn": ["^build", "@storeforge/db#db:push"],
+      "outputs": ["coverage/**"]
+    },
+    "@storeforge/payments#typecheck": {
+      "dependsOn": ["^build", "@storeforge/db#db:generate"]
     }
   }
 }
