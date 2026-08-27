@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
-import { getFeaturedProducts } from "../lib/catalog";
+import { getCollections, getFeaturedProducts } from "../lib/catalog";
 import { CatalogGrid } from "./catalog-grid";
+import { InstagramIcon, StarIcon } from "./icons";
 
 const ETHOS = [
   {
@@ -59,52 +61,64 @@ const FAQ = [
   },
 ];
 
+const INSTAGRAM_URL = "https://instagram.com/beautifulmessbyann";
+
 export default async function HomePage() {
-  const products = await getFeaturedProducts(8);
+  const [products, collections] = await Promise.all([getFeaturedProducts(9), getCollections()]);
+  const [heroProduct, ...stripProducts] = products;
 
   return (
     <main>
-      <section className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-4 px-6 py-16">
-          <p className="text-sm uppercase tracking-widest text-muted">New arrival</p>
-          <h1 className="font-heading text-4xl uppercase text-foreground sm:text-5xl">
-            Beige Sleeveless 3D Floral Frock
-          </h1>
-          <Link
-            href="/products/beige-sleeveless-3d-floral-frock"
-            className="mt-2 rounded-[var(--sf-radius,0.5rem)] bg-brand px-6 py-3 text-sm font-medium uppercase text-brand-foreground"
-          >
-            Shop now
-          </Link>
+      <h1 className="sr-only">Beautiful Mess — playful, elegant kidswear and accessories</h1>
+      {heroProduct?.images[0] ? (
+        <Link href={`/products/${heroProduct.slug}`} className="relative block aspect-[16/7] w-full overflow-hidden">
+          <Image
+            src={heroProduct.images[0].url}
+            alt={heroProduct.name}
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover"
+          />
+        </Link>
+      ) : null}
+
+      {stripProducts.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-4">
+          {stripProducts.slice(0, 4).map((product) =>
+            product.images[0] ? (
+              <Link key={product.id} href={`/products/${product.slug}`} className="group relative block aspect-square overflow-hidden">
+                <Image
+                  src={product.images[0].url}
+                  alt={product.name}
+                  fill
+                  sizes="25vw"
+                  className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                />
+              </Link>
+            ) : null
+          )}
         </div>
-      </section>
+      ) : null}
 
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-heading mb-8 text-2xl uppercase text-foreground">Featured</h2>
+        <h2 className="font-heading mb-8 text-center text-2xl uppercase text-foreground">Most Loved Products</h2>
         <CatalogGrid products={products} />
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-heading mb-8 text-2xl uppercase text-foreground">Shop by category</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Link
-            href="/shop/frocks"
-            className="rounded-[var(--sf-radius,0.5rem)] border border-border bg-background p-8 text-center font-heading text-xl uppercase text-foreground hover:bg-muted"
-          >
-            Frocks
-          </Link>
-          <Link
-            href="/shop/bags"
-            className="rounded-[var(--sf-radius,0.5rem)] border border-border bg-background p-8 text-center font-heading text-xl uppercase text-foreground hover:bg-muted"
-          >
-            Bags
-          </Link>
-          <Link
-            href="/products/bm-gift-card"
-            className="rounded-[var(--sf-radius,0.5rem)] border border-border bg-background p-8 text-center font-heading text-xl uppercase text-foreground hover:bg-muted"
-          >
-            Gift Cards
-          </Link>
+      <section className="bg-brand py-16 text-brand-foreground">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="font-heading mb-10 text-center text-2xl uppercase">Most Searched</h2>
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+            {collections.map((collection) => (
+              <Link key={collection.id} href={`/shop/${collection.slug}`} className="flex flex-col items-center gap-3">
+                <span className="flex h-20 w-20 items-center justify-center rounded-full bg-background text-sm font-semibold uppercase text-brand">
+                  {collection.name.slice(0, 1)}
+                </span>
+                <span className="text-sm uppercase">{collection.name}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -125,30 +139,50 @@ export default async function HomePage() {
         </p>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-heading mb-8 text-center text-2xl uppercase text-foreground">Our Ethos</h2>
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-          {ETHOS.map((pillar) => (
-            <div key={pillar.title} className="text-center">
-              <h3 className="font-heading text-lg uppercase text-foreground">{pillar.title}</h3>
-              <p className="mt-2 text-sm text-muted">{pillar.body}</p>
-            </div>
-          ))}
+      <section className="bg-brand py-16 text-brand-foreground">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="font-heading mb-10 text-center text-2xl uppercase">Our Ethos</h2>
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+            {ETHOS.map((pillar) => (
+              <div key={pillar.title} className="text-center">
+                <h3 className="font-heading text-lg uppercase">{pillar.title}</h3>
+                <p className="mt-2 text-sm ">{pillar.body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
+      <section className="mx-auto max-w-2xl px-6 py-16 text-center">
+        <h2 className="font-heading mb-3 text-2xl uppercase text-foreground">Stay Cute &amp; Stylish</h2>
+        <a
+          href={INSTAGRAM_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 text-sm text-brand underline"
+        >
+          <InstagramIcon className="h-4 w-4" />
+          Follow us on Instagram
+        </a>
+      </section>
+
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-heading mb-8 text-center text-2xl uppercase text-foreground">
-          What our customers say
-        </h2>
+        <div className="mb-8 flex items-center justify-center gap-1 text-brand">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <StarIcon key={i} className="h-4 w-4" />
+          ))}
+        </div>
+        <h2 className="font-heading mb-10 text-center text-2xl uppercase text-foreground">Our Motivations</h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {TESTIMONIALS.map((testimonial) => (
-            <blockquote
-              key={testimonial.name}
-              className="rounded-[var(--sf-radius,0.5rem)] border border-border p-6 text-sm text-foreground"
-            >
+            <blockquote key={testimonial.name} className="rounded-[var(--sf-radius,0.5rem)] bg-brand p-6 text-sm text-brand-foreground">
+              <div className="mb-3 flex gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <StarIcon key={i} className="h-3 w-3" />
+                ))}
+              </div>
               <p>&ldquo;{testimonial.quote}&rdquo;</p>
-              <footer className="mt-3 text-xs uppercase tracking-wide text-muted">{testimonial.name}</footer>
+              <footer className="mt-3 text-xs uppercase tracking-wide ">{testimonial.name}</footer>
             </blockquote>
           ))}
         </div>
@@ -156,16 +190,44 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-3xl px-6 py-16">
         <h2 className="font-heading mb-8 text-center text-2xl uppercase text-foreground">
-          Frequently asked questions
+          Frequently Asked Questions
         </h2>
-        <dl className="space-y-6">
+        <div className="divide-y divide-border border-y border-border">
           {FAQ.map((item) => (
-            <div key={item.q} className="border-b border-border pb-6">
-              <dt className="font-medium uppercase text-foreground">{item.q}</dt>
-              <dd className="mt-2 text-sm text-muted">{item.a}</dd>
-            </div>
+            <details key={item.q} className="group py-4">
+              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium uppercase text-foreground">
+                {item.q}
+                <span className="text-brand transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-3 text-sm text-muted">{item.a}</p>
+            </details>
           ))}
-        </dl>
+        </div>
+      </section>
+
+      <section className="bg-brand py-16 text-brand-foreground">
+        <div className="mx-auto grid max-w-6xl gap-8 px-6 sm:grid-cols-2">
+          <div>
+            <h2 className="font-heading mb-4 text-2xl uppercase">Bangalore Store</h2>
+            <p className="text-sm font-semibold uppercase">Flagship Store</p>
+            <p className="mt-1 text-sm ">
+              102, Railway Parallel Road, 6th Cross, Kumara Park West, Bengaluru, Karnataka 560020
+            </p>
+            <p className="mt-4 text-sm font-semibold uppercase">Contact</p>
+            <p className="mt-1 text-sm ">+91 8088339455</p>
+            <Link
+              href="/help/contact"
+              className="mt-6 inline-block rounded-[var(--sf-radius,0.5rem)] bg-background px-6 py-3 text-sm font-medium uppercase text-brand"
+            >
+              Visit us here
+            </Link>
+          </div>
+          <div>
+            <p className="text-sm font-semibold uppercase">Store timing</p>
+            <p className="mt-1 text-sm ">12:00PM &ndash; 7:00PM</p>
+            <p className="mt-1 text-sm ">Sunday Holiday</p>
+          </div>
+        </div>
       </section>
     </main>
   );

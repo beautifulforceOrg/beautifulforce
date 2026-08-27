@@ -5,6 +5,7 @@ import { ThemeProvider, type StorefrontTheme } from "@storeforge/ui";
 import { CartProvider } from "../lib/cart-context";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
+import { TrustBadges } from "./trust-badges";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <CartProvider>
             <SiteHeader />
             {children}
+            <TrustBadges />
             <SiteFooter />
           </CartProvider>
         </ThemeProvider>

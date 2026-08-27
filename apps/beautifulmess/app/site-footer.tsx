@@ -1,20 +1,31 @@
 import Link from "next/link";
+import { FacebookIcon, InstagramIcon } from "./icons";
 
 const FOR_YOU_LINKS = [
-  { label: "Shop", href: "/shop" },
-  { label: "About Us", href: "/about" },
-  { label: "Gift Cards", href: "/products/bm-gift-card" },
+  { label: "Contact", href: "/help/contact" },
+  { label: "Career & Partnership", href: "/help/careers" },
+  { label: "Press & Events", href: "/help/press" },
+  { label: "Franchise", href: "/help/franchise" },
+  { label: "Gift Card", href: "/products/bm-gift-card" },
 ];
 
 const INFO_LINKS = [
+  { label: "Our Story", href: "/about" },
+  { label: "Contact Us", href: "/help/contact" },
   { label: "Privacy Policy", href: "/policies/privacy" },
-  { label: "Terms of Service", href: "/policies/terms" },
-  { label: "Refund Policy", href: "/policies/refund" },
-  { label: "Contact Information", href: "/help/contact" },
-  { label: "Shipping Policy", href: "/policies/shipping" },
+  { label: "Terms and Conditions", href: "/policies/terms" },
+  { label: "No Exchange and Refunds", href: "/policies/refund" },
+  { label: "Shipping & Delivery", href: "/policies/shipping" },
 ];
 
+// Verified from the gift-card artwork on the live site's own PDP image
+// (@beautifulmessbyann) -- not guessed. No equivalent confirmation was
+// available for a Facebook handle, so that icon isn't linked.
+const INSTAGRAM_URL = "https://instagram.com/beautifulmessbyann";
+
 export function SiteFooter() {
+  const year = new Date().getFullYear();
+
   return (
     <footer className="mt-16 border-t border-border bg-background text-foreground">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 sm:grid-cols-2 md:grid-cols-4">
@@ -32,7 +43,12 @@ export function SiteFooter() {
             <br />
             online.beautifulmess@gmail.com
           </p>
-          <p className="mt-3 text-sm text-muted">12:00PM - 7:00PM · Sunday Holiday</p>
+          <div className="mt-4 flex items-center gap-3">
+            <FacebookIcon className="h-5 w-5 text-muted" aria-hidden="true" />
+            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Beautiful Mess on Instagram">
+              <InstagramIcon className="h-5 w-5 text-muted hover:text-brand" />
+            </a>
+          </div>
         </div>
 
         <div>
@@ -62,10 +78,37 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide">Stay in touch</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide">Subscribe to our email</h3>
+          <form
+            className="mt-3 flex border-b border-border pb-1"
+            action="mailto:online.beautifulmess@gmail.com"
+            method="post"
+            encType="text/plain"
+          >
+            <input
+              type="email"
+              name="email"
+              required
+              placeholder="Email address"
+              className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
+            />
+            <button type="submit" aria-label="Subscribe" className="text-brand">
+              &rarr;
+            </button>
+          </form>
           <p className="mt-3 text-sm text-muted">
-            Worldwide shipping · Curated pieces · Secure payments
+            Every piece we choose and create is crafted with care, blending style with comfort. We&apos;re
+            proud to use the softest materials that kids adore.
           </p>
+        </div>
+      </div>
+
+      <div className="border-t border-border">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 text-xs text-muted">
+          <span>© {year} Beautifulmessstore</span>
+          <Link href="/policies/terms" className="hover:text-foreground">
+            Terms and Policies
+          </Link>
         </div>
       </div>
     </footer>
