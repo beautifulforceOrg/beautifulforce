@@ -23,20 +23,26 @@ Shopify CSV/theme exports -- not scraped):
 - Real nav structure (Home / Shop / Help / About Us) and every link in it
   resolves to a real page (verified by `e2e/purchase.spec.ts`'s link-check
   test)
+- Privacy Policy, Terms of Service, Shipping Policy, and Refund Policy: all
+  four pulled from the live site's actual published policy pages (not in
+  the CSV/theme export, fetched separately) -- not summarized or invented
 
-**Deliberately not fabricated** -- flagged in the onboarding plan as needing
-real input from the client before launch, not invented here:
+**Deliberately not fabricated or reproduced**:
 
-- Privacy Policy, Terms of Service, and Shipping Policy: no real copy was in
-  the export, so these render a clear "pending" placeholder
-  (`app/policies/policy-pending.tsx`) rather than invented legal text.
-  Refund Policy *is* real -- it came from the site's own FAQ.
 - Instagram gallery and press-mention logos (GQ/Elle/Rolling Stone) from the
   live homepage: omitted rather than faked, since reproducing them needs a
   real Instagram embed and verified logo usage rights respectively.
 - Customer accounts and historical order data: **not migrated**, per
   explicit instruction -- this is a fresh storefront, not a data migration
   of the existing customer base.
+- Pixel-for-pixel layout, animation, and micro-interaction parity with the
+  live Shopify theme (page-transition animations, the specific product-card
+  hover/carousel behavior, drawer-cart motion, exact spacing): not
+  attempted. What's real is the brand (colors, fonts, real copy) and the
+  full real catalog with working commerce; the layout is this platform's
+  own component set (`packages/ui`), not a clone of Shopify's "Horizon"
+  theme markup, which was never available to copy from CSV/settings
+  exports in the first place.
 
 ## Local development
 
