@@ -2,6 +2,7 @@
 
 import { db } from "@storeforge/db";
 import { calculateCartTotal, createRazorpayOrderFromEnv } from "@storeforge/payments";
+import { getSessionCustomerId } from "./auth";
 
 export interface CheckoutLine {
   productId: string;
@@ -24,10 +25,13 @@ export async function placeOrder(lines: CheckoutLine[]): Promise<{ gatewayOrderI
       ? `order_e2e_${Date.now()}`
       : (await createRazorpayOrderFromEnv({ amount, receipt })).id;
 
+  const customerId = await getSessionCustomerId();
+
   await db.order.create({
     data: {
       gatewayOrderId,
       status: "PENDING",
+      customerId: customerId ?? undefined,
       items: {
         create: lines.map((line) => ({
           productId: line.productId,

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Button, VariantPicker, formatPrice } from "@storeforge/ui";
 import { HeartIcon } from "../../icons";
+import { toggleWishlist } from "../../../lib/account-actions";
 import { useCart } from "../../../lib/cart-context";
 
 interface Variant {
@@ -23,7 +24,13 @@ interface ProductWithDetails {
   variants: Variant[];
 }
 
-export function ProductDetail({ product }: { product: ProductWithDetails }) {
+export function ProductDetail({
+  product,
+  initialWishlisted,
+}: {
+  product: ProductWithDetails;
+  initialWishlisted: boolean;
+}) {
   const { addItem } = useCart();
   const router = useRouter();
   const [activeImage, setActiveImage] = useState(0);
@@ -32,7 +39,20 @@ export function ProductDetail({ product }: { product: ProductWithDetails }) {
   );
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlisted, setWishlisted] = useState(initialWishlisted);
+  const [wishlistPending, setWishlistPending] = useState(false);
+
+  async function handleToggleWishlist() {
+    if (wishlistPending) return;
+    setWishlistPending(true);
+    const result = await toggleWishlist(product.id);
+    setWishlistPending(false);
+    if (result.requiresLogin) {
+      router.push("/account/login");
+      return;
+    }
+    setWishlisted(result.wishlisted);
+  }
 
   const variantGroupName = product.variants[0]?.name ?? null;
   const selectedVariant = product.variants.find((v) => v.id === selectedVariantId);
@@ -97,12 +117,13 @@ export function ProductDetail({ product }: { product: ProductWithDetails }) {
       <div>
         <button
           type="button"
-          onClick={() => setWishlisted((w) => !w)}
+          onClick={handleToggleWishlist}
           aria-pressed={wishlisted}
-          className="flex items-center gap-2 rounded-[var(--sf-radius,0.5rem)] border border-brand px-4 py-2 text-sm text-brand"
+          className="flex items-center gap-2 rounded-[var(--sf-radius,0.5rem)] border border-brand px-4 py-2 text-sm text-brand disabled:opacity-50"
+          disabled={wishlistPending}
         >
           <HeartIcon filled={wishlisted} className="h-4 w-4" />
-          Add to wishlist
+          {wishlisted ? "Added to wishlist" : "Add to wishlist"}
         </button>
 
         <h1 className="font-heading mt-4 text-3xl uppercase text-foreground">{product.name}</h1>

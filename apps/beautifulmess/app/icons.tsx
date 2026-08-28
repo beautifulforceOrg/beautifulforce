@@ -45,6 +45,15 @@ export function HeartIcon({ className, filled }: IconProps & { filled?: boolean 
   );
 }
 
+export function UserIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c1.5-4 4-6 7.5-6s6 2 7.5 6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function BagIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getCollectionBySlug } from "../../../lib/catalog";
+import { getCollectionBySlug, getWishlistedProductIds } from "../../../lib/catalog";
 import { CatalogGrid } from "../../catalog-grid";
 
 export default async function CollectionPage({
@@ -8,7 +8,10 @@ export default async function CollectionPage({
   params: Promise<{ collectionSlug: string }>;
 }) {
   const { collectionSlug } = await params;
-  const collection = await getCollectionBySlug(collectionSlug);
+  const [collection, wishlistedIds] = await Promise.all([
+    getCollectionBySlug(collectionSlug),
+    getWishlistedProductIds(),
+  ]);
   if (!collection) {
     notFound();
   }
@@ -19,7 +22,7 @@ export default async function CollectionPage({
       {collection.products.length === 0 ? (
         <p className="text-muted">No products in this collection yet.</p>
       ) : (
-        <CatalogGrid products={collection.products} />
+        <CatalogGrid products={collection.products} wishlistedIds={wishlistedIds} />
       )}
     </main>
   );

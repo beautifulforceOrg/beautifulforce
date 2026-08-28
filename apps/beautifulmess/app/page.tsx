@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getCollections, getFeaturedProducts } from "../lib/catalog";
+import { getCollections, getFeaturedProducts, getWishlistedProductIds } from "../lib/catalog";
 import { CatalogGrid } from "./catalog-grid";
 import { InstagramIcon, StarIcon } from "./icons";
 
@@ -63,47 +63,49 @@ const FAQ = [
 
 const INSTAGRAM_URL = "https://instagram.com/beautifulmessbyann";
 
+// Read directly off the live site (same hero/strip/founder images it
+// currently serves, via its own CDN) rather than derived from arbitrary
+// catalog order -- see apps/beautifulmess/README.md's audit section.
+const HERO_IMAGE = "https://beautifulmess.in/cdn/shop/files/WhatsApp_Image_2026-07-09_at_10.00.57.jpg?v=1783590607&width=1600";
+const STRIP_IMAGES = [
+  "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-06-23at13.19.49.jpg?v=1782901586&width=832",
+  "https://beautifulmess.in/cdn/shop/files/WhatsApp_Image_2026-07-01_at_3.43.38_PM.jpg?v=1782901638&width=1600",
+  "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-06-23at13.19.44_1.jpg?v=1782968804&width=832",
+  "https://beautifulmess.in/cdn/shop/files/WhatsApp_Image_2026-07-02_at_10.17.17_AM_1.jpg?v=1782968873&width=1600",
+];
+const FOUNDER_IMAGE = "https://beautifulmess.in/cdn/shop/files/WhatsApp_Image_2026-07-09_at_15.23.34.jpg?height=540&v=1783590954";
+
 export default async function HomePage() {
-  const [products, collections] = await Promise.all([getFeaturedProducts(9), getCollections()]);
-  const [heroProduct, ...stripProducts] = products;
+  const [products, collections, wishlistedIds] = await Promise.all([
+    getFeaturedProducts(9),
+    getCollections(),
+    getWishlistedProductIds(),
+  ]);
 
   return (
     <main>
       <h1 className="sr-only">Beautiful Mess — playful, elegant kidswear and accessories</h1>
-      {heroProduct?.images[0] ? (
-        <Link href={`/products/${heroProduct.slug}`} className="relative block aspect-[16/7] w-full overflow-hidden">
-          <Image
-            src={heroProduct.images[0].url}
-            alt={heroProduct.name}
-            fill
-            sizes="100vw"
-            priority
-            className="object-cover"
-          />
-        </Link>
-      ) : null}
+      <Link href="/shop" className="relative block aspect-[16/7] w-full overflow-hidden">
+        <Image src={HERO_IMAGE} alt="Beautiful Mess" fill sizes="100vw" priority className="object-cover" />
+      </Link>
 
-      {stripProducts.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4">
-          {stripProducts.slice(0, 4).map((product) =>
-            product.images[0] ? (
-              <Link key={product.id} href={`/products/${product.slug}`} className="group relative block aspect-square overflow-hidden">
-                <Image
-                  src={product.images[0].url}
-                  alt={product.name}
-                  fill
-                  sizes="25vw"
-                  className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-                />
-              </Link>
-            ) : null
-          )}
-        </div>
-      ) : null}
+      <div className="grid grid-cols-2 sm:grid-cols-4">
+        {STRIP_IMAGES.map((src) => (
+          <Link key={src} href="/shop" className="group relative block aspect-square overflow-hidden">
+            <Image
+              src={src}
+              alt="Beautiful Mess"
+              fill
+              sizes="25vw"
+              className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+            />
+          </Link>
+        ))}
+      </div>
 
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="font-heading mb-8 text-center text-2xl uppercase text-foreground">Most Loved Products</h2>
-        <CatalogGrid products={products} />
+        <CatalogGrid products={products} wishlistedIds={wishlistedIds} />
       </section>
 
       <section className="bg-brand py-16 text-brand-foreground">
@@ -122,21 +124,26 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <h2 className="font-heading mb-4 text-2xl uppercase text-foreground">Our Founder</h2>
-        <p className="text-sm text-muted">
-          Meet Anitaa Manish, the heart and soul behind Beautiful Mess. Anitaa&apos;s journey in fashion began
-          uniquely, initially as a jewelry designer where she developed her keen eye for style and aesthetics.
-        </p>
-        <p className="mt-4 text-sm text-muted">
-          Her passion for children and design inspired her to overcome numerous challenges and pursue her
-          entrepreneurial dream.
-        </p>
-        <p className="mt-4 text-sm text-muted">
-          Fueled by her love for fashion and children, Anitaa founded Beautiful Mess with a vision to blend
-          playful elegance with childhood joy. Her dedication to celebrating each child&apos;s individuality is
-          evident in every stylish, high-quality piece that carries the Beautiful Mess name.
-        </p>
+      <section className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-10 px-6 py-16 md:grid-cols-2">
+        <div>
+          <h2 className="font-heading mb-4 text-2xl uppercase text-foreground">Anitaa Manish (Founder)</h2>
+          <p className="text-sm text-muted">
+            Meet Anitaa Manish, the heart and soul behind Beautiful Mess. Anitaa&apos;s journey in fashion began
+            uniquely, initially as a jewelry designer where she developed her keen eye for style and aesthetics.
+          </p>
+          <p className="mt-4 text-sm text-muted">
+            Her passion for children and design inspired her to overcome numerous challenges and pursue her
+            entrepreneurial dream.
+          </p>
+          <p className="mt-4 text-sm text-muted">
+            Fueled by her love for fashion and children, Anitaa founded Beautiful Mess with a vision to blend
+            playful elegance with childhood joy. Her dedication to celebrating each child&apos;s individuality is
+            evident in every stylish, high-quality piece that carries the Beautiful Mess name.
+          </p>
+        </div>
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[var(--sf-radius,0.5rem)]">
+          <Image src={FOUNDER_IMAGE} alt="Anitaa Manish, founder of Beautiful Mess" fill sizes="(min-width: 768px) 40vw, 100vw" className="object-cover" />
+        </div>
       </section>
 
       <section className="bg-brand py-16 text-brand-foreground">

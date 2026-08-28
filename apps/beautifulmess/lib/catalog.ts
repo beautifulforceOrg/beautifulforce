@@ -1,4 +1,12 @@
 import { db } from "@storeforge/db";
+import { getSessionCustomerId } from "./auth";
+
+export async function getWishlistedProductIds(): Promise<string[]> {
+  const customerId = await getSessionCustomerId();
+  if (!customerId) return [];
+  const items = await db.wishlistItem.findMany({ where: { customerId }, select: { productId: true } });
+  return items.map((item) => item.productId);
+}
 
 export async function getCollections() {
   return db.collection.findMany({ orderBy: { name: "asc" } });

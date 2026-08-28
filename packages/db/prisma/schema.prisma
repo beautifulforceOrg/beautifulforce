@@ -28,6 +28,7 @@ model Product {
   variants    ProductVariant[]
   images      ProductImage[]
   collections Collection[] @relation("CollectionToProduct")
+  wishlistedBy WishlistItem[]
 }
 
 // A product's purchasable options (size, denomination, ...). Not every
@@ -66,11 +67,30 @@ model Collection {
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  orders    Order[]
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String?
+  // Null for a customer created only as an order's contact (guest
+  // checkout, or created by a webhook) -- account features (login,
+  // wishlist) all require this to be set.
+  passwordHash String?
+  createdAt    DateTime       @default(now())
+  orders       Order[]
+  wishlist     WishlistItem[]
+}
+
+// A signed-in customer's saved products. Requires an account, unlike the
+// cart (which is anonymous/local) -- see apps/beautifulmess/lib/auth.ts
+// for the session this is keyed against.
+model WishlistItem {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, productId])
 }
 
 enum OrderStatus {

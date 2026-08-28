@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "../lib/cart-context";
-import { BagIcon, ChatIcon, HeartIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "./icons";
+import { BagIcon, ChatIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon, WhatsAppIcon } from "./icons";
 
 const SHOP_LINKS = [
   { label: "Apparel (Frocks)", href: "/shop/frocks" },
@@ -22,11 +24,26 @@ const HELP_LINKS = [
 // Real, current announcement copy from the live site.
 const ANNOUNCEMENT = "FLAT 5% OFF ON SIGNING UP WITH BEAUTIFUL MESS";
 const WHATSAPP_URL = "https://wa.me/+918088339455";
+// The client's real logo file, read off the live site's own header.
+const LOGO_URL = "https://beautifulmess.in/cdn/shop/files/BM_Logo.png?height=90&v=1720072314";
 
-export function SiteHeader() {
+export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { lines } = useCart();
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const shopRef = useRef<HTMLDetailsElement>(null);
+  const helpRef = useRef<HTMLDetailsElement>(null);
   const itemCount = lines.reduce((total, line) => total + line.quantity, 0);
+
+  // Next.js Link navigation doesn't remount this header, so a native
+  // <details> dropdown stays open after the route changes underneath it.
+  // Close both whenever the path changes -- covers a click on any link
+  // inside, not just a specific one.
+  useEffect(() => {
+    shopRef.current?.removeAttribute("open");
+    helpRef.current?.removeAttribute("open");
+    setMenuOpen(false);
+  }, [pathname]);
 
   return (
     <>
@@ -52,7 +69,7 @@ export function SiteHeader() {
 
           <nav className="hidden items-center gap-6 text-sm uppercase tracking-wide text-foreground md:flex">
             <Link href="/">Home</Link>
-            <details className="group relative">
+            <details ref={shopRef} className="group relative">
               <summary className="cursor-pointer list-none">Shop</summary>
               <div className="absolute left-0 top-full z-10 mt-2 w-56 rounded-[var(--sf-radius,0.5rem)] border border-border bg-background p-2 shadow-lg">
                 {SHOP_LINKS.map((link) => (
@@ -62,7 +79,7 @@ export function SiteHeader() {
                 ))}
               </div>
             </details>
-            <details className="group relative">
+            <details ref={helpRef} className="group relative">
               <summary className="cursor-pointer list-none">Help</summary>
               <div className="absolute left-0 top-full z-10 mt-2 w-56 rounded-[var(--sf-radius,0.5rem)] border border-border bg-background p-2 shadow-lg">
                 {HELP_LINKS.map((link) => (
@@ -75,8 +92,8 @@ export function SiteHeader() {
             <Link href="/about">About Us</Link>
           </nav>
 
-          <Link href="/" className="font-heading text-2xl uppercase tracking-wide text-foreground">
-            Beautiful Mess
+          <Link href="/" className="relative block h-12 w-32">
+            <Image src={LOGO_URL} alt="Beautiful Mess" fill sizes="128px" className="object-contain" priority />
           </Link>
 
           <div className="flex items-center gap-4">
@@ -89,7 +106,16 @@ export function SiteHeader() {
             <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" aria-label="Message us on WhatsApp" className="hidden sm:block">
               <WhatsAppIcon className="h-5 w-5 text-brand" />
             </a>
-            <HeartIcon className="hidden h-5 w-5 text-brand sm:block" />
+            <Link href={isLoggedIn ? "/account" : "/account/login"} aria-label="My wishlist" className="hidden sm:block">
+              <HeartIcon className="h-5 w-5 text-brand" />
+            </Link>
+            <Link
+              href={isLoggedIn ? "/account" : "/account/login"}
+              aria-label={isLoggedIn ? "My account" : "Log in"}
+              className="hidden sm:block"
+            >
+              <UserIcon className="h-5 w-5 text-foreground" />
+            </Link>
             <Link href="/cart" aria-label={`Cart, ${itemCount} items`} className="relative">
               <BagIcon className="h-5 w-5 text-foreground" />
               {itemCount > 0 ? (

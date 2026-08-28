@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FacebookIcon, InstagramIcon } from "./icons";
+import { TermsPoliciesPopover } from "./terms-policies-popover";
 
 const FOR_YOU_LINKS = [
   { label: "Contact", href: "/help/contact" },
@@ -18,10 +19,10 @@ const INFO_LINKS = [
   { label: "Shipping & Delivery", href: "/policies/shipping" },
 ];
 
-// Verified from the gift-card artwork on the live site's own PDP image
-// (@beautifulmessbyann) -- not guessed. No equivalent confirmation was
-// available for a Facebook handle, so that icon isn't linked.
-const INSTAGRAM_URL = "https://instagram.com/beautifulmessbyann";
+// Both verified directly from the live site's own footer markup (an
+// audit read the real href attributes), not guessed.
+const INSTAGRAM_URL = "https://www.instagram.com/beautifulmessbyann/";
+const FACEBOOK_URL = "https://www.facebook.com/beautifulmessbyann";
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
@@ -44,7 +45,9 @@ export function SiteFooter() {
             online.beautifulmess@gmail.com
           </p>
           <div className="mt-4 flex items-center gap-3">
-            <FacebookIcon className="h-5 w-5 text-muted" aria-hidden="true" />
+            <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" aria-label="Beautiful Mess on Facebook">
+              <FacebookIcon className="h-5 w-5 text-muted hover:text-brand" />
+            </a>
             <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Beautiful Mess on Instagram">
               <InstagramIcon className="h-5 w-5 text-muted hover:text-brand" />
             </a>
@@ -106,9 +109,7 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 text-xs text-muted">
           <span>© {year} Beautifulmessstore</span>
-          <Link href="/policies/terms" className="hover:text-foreground">
-            Terms and Policies
-          </Link>
+          <TermsPoliciesPopover />
         </div>
       </div>
     </footer>

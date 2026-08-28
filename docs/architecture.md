@@ -138,10 +138,18 @@ erDiagram
   Product ||--o{ ProductImage : has
   Product }o--o{ Collection : "belongs to"
   Product ||--o{ OrderItem : "ordered as"
+  Product ||--o{ WishlistItem : "saved as"
   ProductVariant ||--o{ OrderItem : "ordered as (optional)"
   Order ||--o{ OrderItem : contains
   Customer ||--o{ Order : places
+  Customer ||--o{ WishlistItem : saves
 ```
+
+`Customer.passwordHash` (nullable) and `WishlistItem` support an
+account/login feature -- the actual password hashing, session handling,
+and account pages are app-local (an app that wants accounts builds its
+own `lib/auth.ts`), only this storage shape is shared. See
+`packages/db/README.md`.
 
 `ProductVariant`, `ProductImage`, and `Collection` were added onboarding
 the first real client (Beautiful Mess) -- all optional/empty-by-default,

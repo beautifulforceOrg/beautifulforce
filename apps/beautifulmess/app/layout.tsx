@@ -3,6 +3,7 @@ import { Cormorant, Poppins } from "next/font/google";
 import type { ReactNode } from "react";
 import { ThemeProvider, type StorefrontTheme } from "@storeforge/ui";
 import { CartProvider } from "../lib/cart-context";
+import { getSessionCustomerId } from "../lib/auth";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { TrustBadges } from "./trust-badges";
@@ -51,13 +52,15 @@ export const metadata: Metadata = {
   description: "Playful, elegant kidswear and accessories from Beautiful Mess.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const isLoggedIn = Boolean(await getSessionCustomerId());
+
   return (
     <html lang="en" className={`${poppins.variable} ${cormorant.variable}`}>
       <body>
         <ThemeProvider theme={theme}>
           <CartProvider>
-            <SiteHeader />
+            <SiteHeader isLoggedIn={isLoggedIn} />
             {children}
             <TrustBadges />
             <SiteFooter />
