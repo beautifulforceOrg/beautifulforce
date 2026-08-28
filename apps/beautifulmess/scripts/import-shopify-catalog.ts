@@ -22,6 +22,12 @@ interface ShopifyRow {
   "Image Position": string;
 }
 
+interface InventoryRow {
+  Handle: string;
+  "Option1 Value": string;
+  "Available (not editable)": string;
+}
+
 interface ParsedProduct {
   slug: string;
   name: string;
@@ -29,8 +35,25 @@ interface ParsedProduct {
   price: number;
   collectionSlug: string | null;
   collectionName: string | null;
-  variants: { name: string; value: string }[];
+  variants: { name: string; value: string; stockQty: number | null }[];
   images: string[];
+}
+
+// Keyed by `${handle}::${optionValue}` -- inventory_export_1.csv tracks
+// stock per size, not per product. A variant with no matching row (the
+// export only lists sizes that exist in Shopify's inventory system, not
+// every variant this catalog has) is left untracked (null == unlimited),
+// same as a storefront that never imported inventory data at all.
+function parseStockLevels(): Map<string, number> {
+  const csvText = readFileSync(join(DATA_DIR, "inventory_export_1.csv"), "utf-8");
+  const rows = parse(csvText, { columns: true, skip_empty_lines: true }) as InventoryRow[];
+  const stock = new Map<string, number>();
+  for (const row of rows) {
+    const key = `${row.Handle}::${row["Option1 Value"]}`;
+    const available = Number.parseInt(row["Available (not editable)"], 10) || 0;
+    stock.set(key, (stock.get(key) ?? 0) + available);
+  }
+  return stock;
 }
 
 function collectionFor(category: string): { slug: string; name: string } | null {
@@ -40,7 +63,7 @@ function collectionFor(category: string): { slug: string; name: string } | null 
   return null;
 }
 
-function parseProducts(): ParsedProduct[] {
+function parseProducts(stockLevels: Map<string, number>): ParsedProduct[] {
   const csvText = readFileSync(join(DATA_DIR, "products_export_1.csv"), "utf-8");
   const rows = parse(csvText, { columns: true, skip_empty_lines: true }) as ShopifyRow[];
 
@@ -69,7 +92,7 @@ function parseProducts(): ParsedProduct[] {
       "Option1 Name"
     ];
 
-    const variants: { name: string; value: string }[] = [];
+    const variants: { name: string; value: string; stockQty: number | null }[] = [];
     const seenVariants = new Set<string>();
     for (const row of rowsForHandle) {
       const optionValue = row["Option1 Value"];
@@ -77,7 +100,8 @@ function parseProducts(): ParsedProduct[] {
       const key = `${optionName}:${optionValue}`;
       if (seenVariants.has(key)) continue;
       seenVariants.add(key);
-      variants.push({ name: optionName, value: optionValue });
+      const stockKey = `${handle}::${optionValue}`;
+      variants.push({ name: optionName, value: optionValue, stockQty: stockLevels.get(stockKey) ?? null });
     }
 
     const images = rowsForHandle
@@ -102,7 +126,8 @@ function parseProducts(): ParsedProduct[] {
 }
 
 async function main() {
-  const products = parseProducts();
+  const stockLevels = parseStockLevels();
+  const products = parseProducts(stockLevels);
   const collectionIds = new Map<string, string>();
 
   for (const product of products) {
@@ -143,6 +168,7 @@ async function main() {
           productId: saved.id,
           name: variant.name,
           value: variant.value,
+          stockQty: variant.stockQty,
         })),
       });
     }

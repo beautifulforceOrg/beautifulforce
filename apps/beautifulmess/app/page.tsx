@@ -4,20 +4,29 @@ import { getCollections, getFeaturedProducts, getWishlistedProductIds } from "..
 import { CatalogGrid } from "./catalog-grid";
 import { InstagramIcon, StarIcon } from "./icons";
 
+// Icon filenames read directly off the live site's Our Ethos section
+// (services.svg / services_1.svg / services_2.svg), one per pillar.
 const ETHOS = [
   {
     title: "International Design",
     body: "Each piece is thoughtfully crafted to delight little ones, blending elegant design with pure childhood moments",
+    icon: "https://beautifulmess.in/cdn/shop/files/services.svg?v=1760093091&width=1200",
   },
   {
     title: "Comfort & Quality",
     body: "We obsess over the details and strive to deliver the best products every time.",
+    icon: "https://beautifulmess.in/cdn/shop/files/services_1.svg?v=1760093091&width=1200",
   },
   {
     title: "Trending Designs",
     body: "Fresh looks, playful vibes discover new designs every month to inspire your child's unique style and imagination",
+    icon: "https://beautifulmess.in/cdn/shop/files/services_2.svg?v=1760093091&width=1200",
   },
 ];
+
+// Real, plain text row from the live homepage -- no icons or body copy,
+// sitting between the store-info section and the trust badges.
+const ETHOS_WORDS = ["LUXURY", "STYLISH", "COMFORT"];
 
 const TESTIMONIALS = [
   {
@@ -63,17 +72,46 @@ const FAQ = [
 
 const INSTAGRAM_URL = "https://instagram.com/beautifulmessbyann";
 
-// Read directly off the live site (same hero/strip/founder images it
-// currently serves, via its own CDN) rather than derived from arbitrary
-// catalog order -- see apps/beautifulmess/README.md's audit section.
+// Read directly off the live site (same hero/founder images it currently
+// serves, via its own CDN) rather than derived from arbitrary catalog
+// order -- see apps/beautifulmess/README.md's audit section.
 const HERO_IMAGE = "https://beautifulmess.in/cdn/shop/files/WhatsApp_Image_2026-07-09_at_10.00.57.jpg?v=1783590607&width=1600";
-const STRIP_IMAGES = [
-  "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-06-23at13.19.49.jpg?v=1782901586&width=832",
-  "https://beautifulmess.in/cdn/shop/files/WhatsApp_Image_2026-07-01_at_3.43.38_PM.jpg?v=1782901638&width=1600",
-  "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-06-23at13.19.44_1.jpg?v=1782968804&width=832",
-  "https://beautifulmess.in/cdn/shop/files/WhatsApp_Image_2026-07-02_at_10.17.17_AM_1.jpg?v=1782968873&width=1600",
-];
 const FOUNDER_IMAGE = "https://beautifulmess.in/cdn/shop/files/WhatsApp_Image_2026-07-09_at_15.23.34.jpg?height=540&v=1783590954";
+
+// The real site's "shop the look" strip: each tile is a specific product
+// card (verified via each tile's own href on the live site), not a
+// decorative image -- clicking one there goes straight to that product,
+// so it does here too. All eight slugs are real products in this
+// storefront's own catalog.
+
+// The real site's own Instagram-teaser photos (not a live embed on either
+// site) and press-mention logos -- both read directly off the live
+// homepage, not invented. One press logo's filename didn't identify the
+// publication, so no brand name is asserted for it; the other three are
+// GQ, Elle, and Rolling Stone.
+const INSTAGRAM_IMAGES = [
+  "https://beautifulmess.in/cdn/shop/files/mother-daughter-sharing-hot-beverages.jpg?v=1760329482",
+  "https://beautifulmess.in/cdn/shop/files/a-wooden-figurine-of-mother-and-child.jpg?v=1760329773",
+  "https://beautifulmess.in/cdn/shop/files/girl-in-dress-on-bed.jpg?v=1760329801",
+  "https://beautifulmess.in/cdn/shop/files/girl-blowing-bubbles-at-park.jpg?v=1760329827",
+];
+const PRESS_LOGOS = [
+  "https://beautifulmess.in/cdn/shop/files/gq_35c9e59f-d64a-4f2a-b636-78149a2c87de.avif?v=1760096282&width=1200",
+  "https://beautifulmess.in/cdn/shop/files/Adobe_Express_-_file.png?v=1761837237&width=1200",
+  "https://beautifulmess.in/cdn/shop/files/elle_0265bd0c-2d96-4739-a3cb-9674b7a9e2cb.avif?v=1760096283&width=1200",
+  "https://beautifulmess.in/cdn/shop/files/RollingStone_logo-2.avif?v=1760096283&width=1200",
+];
+
+const STRIP_PRODUCTS = [
+  { slug: "beige-sleeveless-3d-floral-frock", name: "Beige Sleeveless 3D Floral Frock", image: "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-06-23at13.19.49.jpg?v=1782901586&width=832" },
+  { slug: "black-ruffle-seq-frock", name: "Black Ruffle Seq Frock", image: "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-06-23at13.19.44_1.jpg?v=1782968804&width=832" },
+  { slug: "black-sparkle-net-frock", name: "Black Sparkle Net Frock", image: "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-06-23at13.19.48_2.jpg?v=1782970013&width=832" },
+  { slug: "blue-frock-with-big-bow-on-shoulder", name: "Blue Frock With Big Bow On Shoulder", image: "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-04-23at10.51.39_bfdb5891-ddd8-426f-9421-8243f8f3bc31.jpg?v=1782359983&width=832" },
+  { slug: "bm-gift-card", name: "BM Gift Card", image: "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-07-01at3.36.25PM.jpg?v=1782900418&width=832" },
+  { slug: "brown-sleeveless-floral-frock", name: "Brown Sleeveless Floral Frock", image: "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-06-23at13.19.48.jpg?v=1782966077&width=832" },
+  { slug: "cream-pearl-embellished-ruffle-neckline-seq-frock", name: "Cream Pearl Embellished Ruffle Neckline Seq Frock", image: "https://beautifulmess.in/cdn/shop/files/WhatsApp_Image_2026-07-02_at_10.42.21_AM_2.jpg?v=1782971733&width=832" },
+  { slug: "cream-ruffle-neck-seq-frock", name: "Cream Ruffle Neck Seq Frock", image: "https://beautifulmess.in/cdn/shop/files/WhatsAppImage2026-06-23at13.19.41_963d6662-4ecb-4068-8b23-cf2b4a6e889f.jpg?v=1782966809&width=832" },
+];
 
 export default async function HomePage() {
   const [products, collections, wishlistedIds] = await Promise.all([
@@ -90,11 +128,16 @@ export default async function HomePage() {
       </Link>
 
       <div className="grid grid-cols-2 sm:grid-cols-4">
-        {STRIP_IMAGES.map((src) => (
-          <Link key={src} href="/shop" className="group relative block aspect-square overflow-hidden">
+        {STRIP_PRODUCTS.map((item) => (
+          <Link
+            key={item.slug}
+            href={`/products/${item.slug}`}
+            aria-label={item.name}
+            className="group relative block aspect-square overflow-hidden"
+          >
             <Image
-              src={src}
-              alt="Beautiful Mess"
+              src={item.image}
+              alt=""
               fill
               sizes="25vw"
               className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
@@ -152,6 +195,9 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             {ETHOS.map((pillar) => (
               <div key={pillar.title} className="text-center">
+                <div className="relative mx-auto mb-3 h-12 w-12">
+                  <Image src={pillar.icon} alt="" fill sizes="48px" className="object-contain" />
+                </div>
                 <h3 className="font-heading text-lg uppercase">{pillar.title}</h3>
                 <p className="mt-2 text-sm ">{pillar.body}</p>
               </div>
@@ -160,17 +206,42 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-2xl px-6 py-16 text-center">
+      <section className="mx-auto max-w-6xl px-6 py-16 text-center">
         <h2 className="font-heading mb-3 text-2xl uppercase text-foreground">Stay Cute &amp; Stylish</h2>
         <a
           href={INSTAGRAM_URL}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-2 text-sm text-brand underline"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-brand underline"
         >
           <InstagramIcon className="h-4 w-4" />
           Follow us on Instagram
         </a>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {INSTAGRAM_IMAGES.map((src) => (
+            <a
+              key={src}
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="View on Instagram"
+              className="relative block aspect-square overflow-hidden"
+            >
+              <Image src={src} alt="" fill sizes="25vw" className="object-cover" />
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-4xl px-6 py-16 text-center">
+        <h2 className="font-heading mb-8 text-2xl uppercase text-foreground">As Appreciated On</h2>
+        <div className="flex flex-wrap items-center justify-center gap-10">
+          {PRESS_LOGOS.map((src) => (
+            <div key={src} className="relative h-10 w-32">
+              <Image src={src} alt="" fill sizes="128px" className="object-contain" />
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-16">
@@ -236,6 +307,14 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-2 py-10 text-center">
+        {ETHOS_WORDS.map((word) => (
+          <h2 key={word} className="font-heading text-xl uppercase text-foreground">
+            {word}
+          </h2>
+        ))}
+      </div>
     </main>
   );
 }

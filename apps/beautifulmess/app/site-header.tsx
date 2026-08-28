@@ -7,10 +7,11 @@ import { useEffect, useRef, useState } from "react";
 import { useCart } from "../lib/cart-context";
 import { BagIcon, ChatIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon, WhatsAppIcon } from "./icons";
 
+// "Gift Hampers" removed -- there's no real gift-hamper catalog content
+// yet (the only gift-card product already has its own link under Help).
 const SHOP_LINKS = [
   { label: "Apparel (Frocks)", href: "/shop/frocks" },
   { label: "Accessories (Bags)", href: "/shop/bags" },
-  { label: "Gift Hampers", href: "/products/bm-gift-card" },
 ];
 
 const HELP_LINKS = [
@@ -21,8 +22,15 @@ const HELP_LINKS = [
   { label: "Gift Card", href: "/products/bm-gift-card" },
 ];
 
-// Real, current announcement copy from the live site.
-const ANNOUNCEMENT = "FLAT 5% OFF ON SIGNING UP WITH BEAUTIFUL MESS";
+// The real site's own announcement-bar slideshow: 3 real messages
+// (one is the client's own typo, "LILL ANGLES", kept verbatim rather
+// than silently corrected) that rotate automatically with manual
+// prev/next controls, same as the live site's slideshow-slide markup.
+const ANNOUNCEMENTS = [
+  "FLAT 5% OFF ON SIGNING UP WITH BEAUTIFUL MESS",
+  "STYLED OVER 20,000 + LILL ANGLES",
+  "SHIPPING HAPPINESS GLOBALLY",
+];
 const WHATSAPP_URL = "https://wa.me/+918088339455";
 // The client's real logo file, read off the live site's own header.
 const LOGO_URL = "https://beautifulmess.in/cdn/shop/files/BM_Logo.png?height=90&v=1720072314";
@@ -31,9 +39,17 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { lines } = useCart();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [announcementIndex, setAnnouncementIndex] = useState(0);
   const shopRef = useRef<HTMLDetailsElement>(null);
   const helpRef = useRef<HTMLDetailsElement>(null);
   const itemCount = lines.reduce((total, line) => total + line.quantity, 0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnnouncementIndex((i) => (i + 1) % ANNOUNCEMENTS.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Next.js Link navigation doesn't remount this header, so a native
   // <details> dropdown stays open after the route changes underneath it.
@@ -50,9 +66,25 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
       <div
         role="region"
         aria-label="Announcement"
-        className="bg-brand py-2 text-center text-xs font-medium uppercase tracking-wide text-brand-foreground"
+        className="flex items-center justify-center gap-3 bg-brand py-2 text-center text-xs font-medium uppercase tracking-wide text-brand-foreground"
       >
-        {ANNOUNCEMENT}
+        <button
+          type="button"
+          aria-label="Previous announcement"
+          onClick={() => setAnnouncementIndex((i) => (i - 1 + ANNOUNCEMENTS.length) % ANNOUNCEMENTS.length)}
+          className="opacity-75 hover:opacity-100"
+        >
+          &lsaquo;
+        </button>
+        <span>{ANNOUNCEMENTS[announcementIndex]}</span>
+        <button
+          type="button"
+          aria-label="Next announcement"
+          onClick={() => setAnnouncementIndex((i) => (i + 1) % ANNOUNCEMENTS.length)}
+          className="opacity-75 hover:opacity-100"
+        >
+          &rsaquo;
+        </button>
       </div>
 
       <header className="border-b border-border bg-background">
@@ -69,7 +101,10 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           <nav className="hidden items-center gap-6 text-sm uppercase tracking-wide text-foreground md:flex">
             <Link href="/">Home</Link>
-            <details ref={shopRef} className="group relative">
+            {/* Shared `name` makes these two native <details> mutually
+                exclusive -- opening one closes the other, same as the
+                real site's dropdowns. */}
+            <details ref={shopRef} name="site-nav-dropdown" className="group relative">
               <summary className="cursor-pointer list-none">Shop</summary>
               <div className="absolute left-0 top-full z-10 mt-2 w-56 rounded-[var(--sf-radius,0.5rem)] border border-border bg-background p-2 shadow-lg">
                 {SHOP_LINKS.map((link) => (
@@ -79,7 +114,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                 ))}
               </div>
             </details>
-            <details ref={helpRef} className="group relative">
+            <details ref={helpRef} name="site-nav-dropdown" className="group relative">
               <summary className="cursor-pointer list-none">Help</summary>
               <div className="absolute left-0 top-full z-10 mt-2 w-56 rounded-[var(--sf-radius,0.5rem)] border border-border bg-background p-2 shadow-lg">
                 {HELP_LINKS.map((link) => (
@@ -97,7 +132,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           </Link>
 
           <div className="flex items-center gap-4">
-            <Link href="/shop" aria-label="Search the catalog" className="hidden sm:block">
+            <Link href="/search" aria-label="Search the catalog" className="hidden sm:block">
               <SearchIcon className="h-5 w-5 text-brand" />
             </Link>
             <Link href="/help/contact" aria-label="Chat with us" className="hidden sm:block">

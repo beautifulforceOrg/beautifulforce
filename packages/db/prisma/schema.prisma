@@ -29,6 +29,7 @@ model Product {
   images      ProductImage[]
   collections Collection[] @relation("CollectionToProduct")
   wishlistedBy WishlistItem[]
+  reviews     Review[]
 }
 
 // A product's purchasable options (size, denomination, ...). Not every
@@ -42,6 +43,9 @@ model ProductVariant {
   value      String // the option value, e.g. "5-6 years" or "₹5000"
   sku        String?
   price      Int? // overrides Product.price when set (a variant-specific price)
+  // Null means untracked/unlimited (the default for a storefront that
+  // never imports inventory data). 0 means sold out.
+  stockQty   Int?
   orderItems OrderItem[]
 
   @@unique([productId, name, value])
@@ -77,6 +81,7 @@ model Customer {
   createdAt    DateTime       @default(now())
   orders       Order[]
   wishlist     WishlistItem[]
+  reviews      Review[]
 }
 
 // A signed-in customer's saved products. Requires an account, unlike the
@@ -88,6 +93,23 @@ model WishlistItem {
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   productId  String
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, productId])
+}
+
+// A signed-in customer's review of a product. Starts empty for a
+// migrated catalog -- the real site's own reviews app (Judge.me, per its
+// theme settings) had none recorded for any product either at migration
+// time, so this isn't backfilled with invented reviews.
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  rating     Int // 1-5
+  comment    String
   createdAt  DateTime @default(now())
 
   @@unique([customerId, productId])

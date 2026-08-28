@@ -139,10 +139,12 @@ erDiagram
   Product }o--o{ Collection : "belongs to"
   Product ||--o{ OrderItem : "ordered as"
   Product ||--o{ WishlistItem : "saved as"
+  Product ||--o{ Review : "reviewed as"
   ProductVariant ||--o{ OrderItem : "ordered as (optional)"
   Order ||--o{ OrderItem : contains
   Customer ||--o{ Order : places
   Customer ||--o{ WishlistItem : saves
+  Customer ||--o{ Review : writes
 ```
 
 `Customer.passwordHash` (nullable) and `WishlistItem` support an
@@ -155,6 +157,13 @@ own `lib/auth.ts`), only this storage shape is shared. See
 the first real client (Beautiful Mess) -- all optional/empty-by-default,
 so a single-variant, single-image product still behaves like the original
 shape. See `packages/db/README.md`.
+
+`Review` (one per customer per product, requires an account) supports a
+product-detail "Customer Reviews" section -- starts empty for a migrated
+catalog rather than backfilled with invented reviews. `ProductVariant`
+also gained a nullable `stockQty` (null = untracked/unlimited, 0 = sold
+out) so a storefront can optionally import real inventory data. See
+`packages/db/README.md`.
 
 ## 5. `packages/ui` theming flow
 

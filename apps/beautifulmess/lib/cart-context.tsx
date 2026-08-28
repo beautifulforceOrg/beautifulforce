@@ -15,6 +15,13 @@ export interface CartLine {
   name: string;
   price: number;
   quantity: number;
+  // Only set for the gift-card product's "send to a friend" flow. There's
+  // no transactional email provider wired up yet, so this is stored and
+  // shown at checkout for a human to action, not auto-sent -- see
+  // product-detail.tsx's gift-card recipient fields.
+  giftRecipientEmail?: string;
+  giftRecipientName?: string;
+  giftMessage?: string;
 }
 
 interface CartContextValue {
@@ -58,7 +65,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (existing) {
         return prev.map((line) =>
           line.productId === item.productId
-            ? { ...line, variantId: item.variantId, variantLabel: item.variantLabel, quantity: line.quantity + 1 }
+            ? {
+                ...line,
+                variantId: item.variantId,
+                variantLabel: item.variantLabel,
+                giftRecipientEmail: item.giftRecipientEmail,
+                giftRecipientName: item.giftRecipientName,
+                giftMessage: item.giftMessage,
+                quantity: line.quantity + 1,
+              }
             : line
         );
       }

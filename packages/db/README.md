@@ -38,7 +38,7 @@ guardrail an AI agent making unsupervised schema changes depends on.
 ## Core entities
 
 `Product`, `ProductVariant`, `ProductImage`, `Collection`, `Customer`,
-`WishlistItem`, `Order`, `OrderItem`. `Order.gatewayOrderId` is unique at
+`WishlistItem`, `Review`, `Order`, `OrderItem`. `Order.gatewayOrderId` is unique at
 the database level -- it is the same key `packages/payments`' webhook
 handler uses to guarantee idempotency, so a duplicate can't slip in even
 if application logic has a bug.
@@ -58,3 +58,10 @@ without ever having an account. The actual password hashing, session
 handling, and account pages are app-local
 (`apps/beautifulmess/lib/auth.ts`), not here -- only the storage shape
 that any future storefront wanting accounts would also need is shared.
+
+`Review` (one per customer per product, `@@unique([customerId, productId])`)
+supports a product-detail "Customer Reviews" section for the same client
+-- starts empty for a migrated catalog rather than backfilled with
+invented reviews. `ProductVariant.stockQty` (nullable, added at the same
+time) lets a storefront optionally import real inventory data: `null`
+means untracked/unlimited (the default), `0` means sold out.
