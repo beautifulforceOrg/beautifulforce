@@ -32,8 +32,10 @@ const ANNOUNCEMENTS = [
   "SHIPPING HAPPINESS GLOBALLY",
 ];
 const WHATSAPP_URL = "https://wa.me/+918088339455";
-// The client's real logo file, read off the live site's own header.
-const LOGO_URL = "https://beautifulmess.in/cdn/shop/files/BM_Logo.png?height=90&v=1720072314";
+// The client's real logo file, re-hosted on our own ImageKit account
+// (scripts/migrate-images-to-imagekit.ts) rather than hotlinked from the
+// client's Shopify CDN.
+const LOGO_URL = "https://ik.imagekit.io/beautifulforce/beautifulmess/BM_Logo.png";
 
 export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { lines } = useCart();
