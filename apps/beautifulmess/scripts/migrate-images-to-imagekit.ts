@@ -74,7 +74,18 @@ async function uploadOne(url: string): Promise<string> {
 }
 
 async function main() {
+  const dbHost = new URL(process.env.DATABASE_URL ?? "").host || "(unknown)";
+  console.log(`Connecting to database host: ${dbHost}`);
+
   const images = await db.productImage.findMany({ select: { id: true, url: true } });
+  const alreadyMigrated = images.filter((image) => image.url.includes("ik.imagekit.io")).length;
+  if (images.length > 0 && alreadyMigrated === images.length) {
+    console.error(
+      `All ${images.length} ProductImage rows on ${dbHost} already point at ik.imagekit.io -- ` +
+        `this database was already migrated. Did you mean to point DATABASE_URL at a different database?`
+    );
+    process.exit(1);
+  }
   const uniqueCatalogUrls = Array.from(new Set(images.map((image) => image.url)));
   const allUrls = Array.from(new Set([...uniqueCatalogUrls, ...STATIC_URLS]));
 
