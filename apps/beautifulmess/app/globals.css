@@ -10,3 +10,19 @@ body {
 h1, h2, h3, h4 {
   font-family: var(--sf-font-heading, var(--sf-font-sans));
 }
+
+/* iOS Safari zooms the whole page in on focus for any text input under
+   16px -- every form field on this site was 14px (Tailwind's text-sm),
+   so every tap into a field zoomed the page. Force 16px on text-entry
+   controls specifically (not radio/checkbox, which don't trigger it and
+   have their own sizing). */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="search"],
+input[type="number"],
+textarea,
+select {
+  font-size: 16px;
+}

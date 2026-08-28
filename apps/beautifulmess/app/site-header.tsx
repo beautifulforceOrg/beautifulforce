@@ -74,7 +74,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           type="button"
           aria-label="Previous announcement"
           onClick={() => setAnnouncementIndex((i) => (i - 1 + ANNOUNCEMENTS.length) % ANNOUNCEMENTS.length)}
-          className="opacity-75 hover:opacity-100"
+          className="px-3 py-3 opacity-75 hover:opacity-100"
         >
           &lsaquo;
         </button>
@@ -83,7 +83,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           type="button"
           aria-label="Next announcement"
           onClick={() => setAnnouncementIndex((i) => (i + 1) % ANNOUNCEMENTS.length)}
-          className="opacity-75 hover:opacity-100"
+          className="px-3 py-3 opacity-75 hover:opacity-100"
         >
           &rsaquo;
         </button>
@@ -93,7 +93,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <button
             type="button"
-            className="md:hidden"
+            className="-m-2 p-2 md:hidden"
             aria-label="Open menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
@@ -133,30 +133,36 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
             <Image src={LOGO_URL} alt="Beautiful Mess" fill sizes="128px" className="object-contain" priority />
           </Link>
 
-          <div className="flex items-center gap-4">
-            <Link href="/search" aria-label="Search the catalog" className="hidden sm:block">
+          <div className="flex items-center gap-1">
+            <Link href="/search" aria-label="Search the catalog" className="hidden p-2.5 sm:block">
               <SearchIcon className="h-5 w-5 text-brand" />
             </Link>
-            <Link href="/help/contact" aria-label="Chat with us" className="hidden sm:block">
+            <Link href="/help/contact" aria-label="Chat with us" className="hidden p-2.5 sm:block">
               <ChatIcon className="h-5 w-5 text-brand" />
             </Link>
-            <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" aria-label="Message us on WhatsApp" className="hidden sm:block">
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Message us on WhatsApp"
+              className="hidden p-2.5 sm:block"
+            >
               <WhatsAppIcon className="h-5 w-5 text-brand" />
             </a>
-            <Link href={isLoggedIn ? "/account" : "/account/login"} aria-label="My wishlist" className="hidden sm:block">
+            <Link href={isLoggedIn ? "/account" : "/account/login"} aria-label="My wishlist" className="hidden p-2.5 sm:block">
               <HeartIcon className="h-5 w-5 text-brand" />
             </Link>
             <Link
               href={isLoggedIn ? "/account" : "/account/login"}
               aria-label={isLoggedIn ? "My account" : "Log in"}
-              className="hidden sm:block"
+              className="hidden p-2.5 sm:block"
             >
               <UserIcon className="h-5 w-5 text-foreground" />
             </Link>
-            <Link href="/cart" aria-label={`Cart, ${itemCount} items`} className="relative">
+            <Link href="/cart" aria-label={`Cart, ${itemCount} items`} className="relative p-2.5">
               <BagIcon className="h-5 w-5 text-foreground" />
               {itemCount > 0 ? (
-                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[10px] text-brand-foreground">
+                <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[10px] text-brand-foreground">
                   {itemCount}
                 </span>
               ) : null}
@@ -165,21 +171,21 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
         </div>
 
         {menuOpen ? (
-          <nav className="flex flex-col gap-1 border-t border-border px-6 py-4 text-sm uppercase tracking-wide text-foreground md:hidden">
-            <Link href="/" onClick={() => setMenuOpen(false)}>
+          <nav className="flex flex-col border-t border-border px-6 py-2 text-sm uppercase tracking-wide text-foreground md:hidden">
+            <Link className="py-3" href="/" onClick={() => setMenuOpen(false)}>
               Home
             </Link>
             {SHOP_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+              <Link className="py-3" key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
                 {link.label}
               </Link>
             ))}
             {HELP_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+              <Link className="py-3" key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
                 {link.label}
               </Link>
             ))}
-            <Link href="/about" onClick={() => setMenuOpen(false)}>
+            <Link className="py-3" href="/about" onClick={() => setMenuOpen(false)}>
               About Us
             </Link>
           </nav>

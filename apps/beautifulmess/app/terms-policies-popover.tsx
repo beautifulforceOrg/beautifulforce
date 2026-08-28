@@ -27,7 +27,7 @@ export function TermsPoliciesPopover() {
 
   return (
     <details ref={ref} className="group relative">
-      <summary className="cursor-pointer list-none hover:text-foreground">Terms and Policies</summary>
+      <summary className="-my-2 cursor-pointer list-none py-2 hover:text-foreground">Terms and Policies</summary>
       <div className="absolute bottom-full right-0 z-10 mb-2 w-52 rounded-[var(--sf-radius,0.5rem)] border border-border bg-background p-2 shadow-lg">
         <ul>
           {POLICY_LINKS.map((link) => (

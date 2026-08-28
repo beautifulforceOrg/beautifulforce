@@ -44,11 +44,11 @@ export function SiteFooter() {
             <br />
             online.beautifulmess@gmail.com
           </p>
-          <div className="mt-4 flex items-center gap-3">
-            <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" aria-label="Beautiful Mess on Facebook">
+          <div className="-ml-2.5 mt-4 flex items-center gap-1">
+            <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" aria-label="Beautiful Mess on Facebook" className="p-2.5">
               <FacebookIcon className="h-5 w-5 text-muted hover:text-brand" />
             </a>
-            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Beautiful Mess on Instagram">
+            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Beautiful Mess on Instagram" className="p-2.5">
               <InstagramIcon className="h-5 w-5 text-muted hover:text-brand" />
             </a>
           </div>
@@ -95,7 +95,7 @@ export function SiteFooter() {
               placeholder="Email address"
               className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
             />
-            <button type="submit" aria-label="Subscribe" className="text-brand">
+            <button type="submit" aria-label="Subscribe" className="-mr-2.5 p-2.5 text-brand">
               &rarr;
             </button>
           </form>
