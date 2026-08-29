@@ -26,3 +26,16 @@ textarea,
 select {
   font-size: 16px;
 }
+
+/* Every text input/textarea in this app is styled with Tailwind's
+   outline-none and never given a replacement -- a keyboard user tabbing
+   through login, signup, checkout, search, or contact forms had no
+   visible indication of which field was focused. :focus-visible (not
+   :focus) keeps this to keyboard/programmatic focus, not every mouse
+   click, matching modern focus-ring conventions. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--sf-color-brand, #1e40af);
+  outline-offset: 1px;
+}

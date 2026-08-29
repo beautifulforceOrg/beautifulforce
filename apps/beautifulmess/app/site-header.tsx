@@ -130,7 +130,15 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           </nav>
 
           <Link href="/" className="relative block h-12 w-32">
-            <Image src={LOGO_URL} alt="Beautiful Mess" fill sizes="128px" className="object-contain" priority />
+            <Image
+              src={LOGO_URL}
+              alt="Beautiful Mess"
+              fill
+              sizes="128px"
+              className="object-contain"
+              priority
+              fetchPriority="high"
+            />
           </Link>
 
           <div className="flex items-center gap-1">

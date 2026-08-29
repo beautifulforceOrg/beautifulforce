@@ -70,3 +70,34 @@ test("form fields use a 16px font so iOS does not auto-zoom on focus", async ({ 
   const fontSize = await emailInput.evaluate((el) => getComputedStyle(el).fontSize);
   expect(fontSize).toBe("16px");
 });
+
+test.describe("landscape orientation", () => {
+  // A representative phone-landscape viewport (roughly iPhone 13/Pixel 7
+  // rotated) -- we only ever tested portrait until now, on both projects.
+  test.use({ viewport: { width: 844, height: 390 } });
+
+  test("no page requires horizontal scrolling in landscape", async ({ page }) => {
+    for (const path of ["/", "/shop/frocks", "/products/blue-frock-with-big-bow-on-shoulder", "/checkout"]) {
+      try {
+        await page.goto(path);
+      } catch {
+        await page.goto(path);
+      }
+      const overflowsBy = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overflowsBy, `${path} should not overflow horizontally in landscape`).toBeLessThanOrEqual(2);
+    }
+  });
+
+  test("navigation still works in landscape (wide enough to show the desktop nav, by design)", async ({ page }) => {
+    await page.goto("/");
+    // 844px landscape is above Tailwind's md breakpoint (768px), so the
+    // header intentionally shows the desktop text nav here instead of the
+    // hamburger -- the same responsive behavior a real landscape phone or
+    // small tablet gets. Confirm that path works too, not just portrait's
+    // hamburger menu.
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeHidden();
+    await page.getByText("Shop", { exact: true }).tap();
+    await page.getByRole("link", { name: "Accessories (Bags)" }).tap();
+    await expect(page).toHaveURL(/\/shop\/bags$/);
+  });
+});

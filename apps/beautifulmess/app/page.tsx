@@ -126,7 +126,15 @@ export default async function HomePage() {
     <main>
       <h1 className="sr-only">Beautiful Mess — playful, elegant kidswear and accessories</h1>
       <Link href="/shop" className="relative block aspect-[16/7] w-full overflow-hidden">
-        <Image src={HERO_IMAGE} alt="Beautiful Mess" fill sizes="100vw" priority className="object-cover" />
+        <Image
+          src={HERO_IMAGE}
+          alt="Beautiful Mess"
+          fill
+          sizes="100vw"
+          priority
+          fetchPriority="high"
+          className="object-cover"
+        />
       </Link>
 
       <div className="grid grid-cols-2 sm:grid-cols-4">

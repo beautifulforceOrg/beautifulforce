@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { StarIcon } from "../../icons";
 import { submitReview } from "../../../lib/review-actions";
 import { summarizeRatings } from "../../../lib/reviews";
@@ -39,8 +39,14 @@ export function ReviewsSection({
   const [submitted, setSubmitted] = useState(hasReviewedAlready);
   const [isPending, startTransition] = useTransition();
   const summary = summarizeRatings(reviews.map((r) => r.rating));
+  // A ref, not state, so a second click arriving before React commits the
+  // `isPending` update (the `disabled` prop lags one render behind a
+  // synchronous double-click) is still caught immediately.
+  const submitInFlight = useRef(false);
 
   function handleSubmit(formData: FormData) {
+    if (submitInFlight.current) return;
+    submitInFlight.current = true;
     setError(null);
     startTransition(async () => {
       const result = await submitReview(productId, productSlug, formData);
@@ -49,6 +55,7 @@ export function ReviewsSection({
         return;
       }
       if (result.error) {
+        submitInFlight.current = false;
         setError(result.error);
         return;
       }

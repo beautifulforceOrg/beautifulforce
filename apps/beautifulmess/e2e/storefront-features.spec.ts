@@ -65,6 +65,10 @@ test.describe("PLP sort, filter, and count", () => {
   test("shows a real item count and sorts low to high by price", async ({ page }) => {
     await page.goto("/shop/frocks");
     await expect(page.getByText(/^\d+ items?$/)).toBeVisible();
+    // The sort <select>'s onChange handler only exists once React hydrates
+    // -- interacting before then can silently miss the event in some
+    // browsers under dev-mode's slower, unoptimized bundle.
+    await page.waitForLoadState("networkidle");
 
     await page.getByLabel("Sort products").selectOption("price-ascending");
     await expect(page).toHaveURL(/sort=price-ascending/);
@@ -79,6 +83,7 @@ test.describe("PLP sort, filter, and count", () => {
 
   test("filters to in-stock only", async ({ page }) => {
     await page.goto("/shop/frocks");
+    await page.waitForLoadState("networkidle");
     const countBefore = await page.getByText(/^\d+ items?$/).textContent();
 
     await page.getByLabel("Filter by availability").selectOption("in-stock");
