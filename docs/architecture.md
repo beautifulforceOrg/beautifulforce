@@ -145,7 +145,23 @@ erDiagram
   Customer ||--o{ Order : places
   Customer ||--o{ WishlistItem : saves
   Customer ||--o{ Review : writes
+  NewsletterSubscriber {
+    string email
+  }
+  ContactMessage {
+    string name
+    string email
+    string comment
+  }
 ```
+
+`NewsletterSubscriber` and `ContactMessage` are intentionally standalone
+(no relation to `Customer`) -- the footer newsletter form and the Help >
+Contact page's form are both anonymous, no account required. They
+replace what were previously `action="mailto:..."` forms, which don't
+reliably work across browsers and never stored a submission anywhere;
+see `apps/beautifulmess/lib/newsletter-actions.ts` and
+`contact-actions.ts`.
 
 `Customer.passwordHash` (nullable) and `WishlistItem` support an
 account/login feature -- the actual password hashing, session handling,

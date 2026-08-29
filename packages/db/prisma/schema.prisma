@@ -121,6 +121,28 @@ model Review {
   @@unique([customerId, productId])
 }
 
+// The footer newsletter form. Not tied to a Customer -- someone can
+// subscribe without ever creating an account. Email is unique so a
+// re-submission is a harmless no-op, not a duplicate row.
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+// The Help > Contact page's "Any queries or feedback" form. Stored so a
+// submission is never silently lost even before a storefront wires up a
+// real transactional email provider to actually notify the merchant --
+// see apps/beautifulmess/lib/contact-actions.ts.
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  comment   String
+  createdAt DateTime @default(now())
+}
+
 enum OrderStatus {
   PENDING
   PAID

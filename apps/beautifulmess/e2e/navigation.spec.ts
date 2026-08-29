@@ -103,10 +103,20 @@ test.describe("catalog and cart interactions", () => {
     const productName = label!.replace(/^Add /, "").replace(/ to wishlist$/, "");
 
     await firstWishlistButton.click();
-    await expect(page.getByRole("button", { name: `Remove ${productName} from wishlist` })).toBeVisible();
+    const removeButton = page.getByRole("button", { name: `Remove ${productName} from wishlist` });
+    await expect(removeButton).toBeVisible();
 
     await page.goto("/account");
     await expect(page.getByText(productName)).toBeVisible();
+
+    // Toggling it off is the other half of this feature -- every existing
+    // test only ever adds, none confirmed removal actually persists.
+    await page.goto("/shop/frocks");
+    await page.getByRole("button", { name: `Remove ${productName} from wishlist` }).click();
+    await expect(page.getByRole("button", { name: `Add ${productName} to wishlist` })).toBeVisible();
+
+    await page.goto("/account");
+    await expect(page.getByText(productName)).not.toBeVisible();
   });
 
   test("cart quantity controls and remove work end to end", async ({ page }) => {

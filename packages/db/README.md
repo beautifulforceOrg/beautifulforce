@@ -38,7 +38,8 @@ guardrail an AI agent making unsupervised schema changes depends on.
 ## Core entities
 
 `Product`, `ProductVariant`, `ProductImage`, `Collection`, `Customer`,
-`WishlistItem`, `Review`, `Order`, `OrderItem`. `Order.gatewayOrderId` is unique at
+`WishlistItem`, `Review`, `NewsletterSubscriber`, `ContactMessage`,
+`Order`, `OrderItem`. `Order.gatewayOrderId` is unique at
 the database level -- it is the same key `packages/payments`' webhook
 handler uses to guarantee idempotency, so a duplicate can't slip in even
 if application logic has a bug.
@@ -65,3 +66,8 @@ supports a product-detail "Customer Reviews" section for the same client
 invented reviews. `ProductVariant.stockQty` (nullable, added at the same
 time) lets a storefront optionally import real inventory data: `null`
 means untracked/unlimited (the default), `0` means sold out.
+
+`NewsletterSubscriber` and `ContactMessage` back the footer newsletter
+form and the Help > Contact page's form -- both anonymous, no relation
+to `Customer`. They replace `action="mailto:..."` forms, which don't
+reliably work across browsers and never stored a submission anywhere.

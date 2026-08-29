@@ -93,6 +93,27 @@ test.describe("PLP sort, filter, and count", () => {
     // to in-stock-only should not change the count.
     await expect(page.getByText(/^\d+ items?$/)).toHaveText(countBefore ?? "");
   });
+
+  test("filters by price range", async ({ page }) => {
+    // Every frock in this catalog is real-priced at exactly ₹5,500 (no
+    // in-collection price variety to fabricate a "narrows the results"
+    // scenario against) -- so the meaningful, honest check is a boundary
+    // one: a minimum above every real price excludes everything, and one
+    // below it includes everything.
+    await page.goto("/shop/frocks");
+    await page.waitForLoadState("networkidle");
+    const countBefore = await page.getByText(/^\d+ items?$/).textContent();
+
+    await page.getByLabel("Minimum price").fill("6000");
+    await page.getByLabel("Minimum price").blur();
+    await expect(page).toHaveURL(/minPrice=6000/);
+    await expect(page.getByText("0 items")).toBeVisible();
+
+    await page.getByLabel("Minimum price").fill("1000");
+    await page.getByLabel("Minimum price").blur();
+    await expect(page).toHaveURL(/minPrice=1000/);
+    await expect(page.getByText(/^\d+ items?$/)).toHaveText(countBefore ?? "");
+  });
 });
 
 test.describe("hover-swap product images", () => {

@@ -1,3 +1,5 @@
+import { ContactForm } from "./contact-form";
+
 const ADDRESS = "102, Railway Parallel Road, 6th Cross, Kumara Park West, Bengaluru, Karnataka 560020";
 const MAP_SRC = `https://www.google.com/maps?q=${encodeURIComponent(ADDRESS)}&output=embed`;
 
@@ -40,42 +42,7 @@ export default function ContactPage() {
 
         <div>
           <h2 className="font-heading mb-4 text-lg uppercase text-foreground">Any queries or feedback</h2>
-          <form action="mailto:online.beautifulmess@gmail.com" method="post" encType="text/plain" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                name="Name"
-                required
-                placeholder="Name"
-                className="rounded-[var(--sf-radius,0.5rem)] border border-border px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted"
-              />
-              <input
-                type="email"
-                name="Email"
-                required
-                placeholder="Email"
-                className="rounded-[var(--sf-radius,0.5rem)] border border-border px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted"
-              />
-            </div>
-            <input
-              type="tel"
-              name="Phone"
-              placeholder="Phone"
-              className="w-full rounded-[var(--sf-radius,0.5rem)] border border-border px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted"
-            />
-            <textarea
-              name="Comment"
-              rows={5}
-              placeholder="Comment"
-              className="w-full rounded-[var(--sf-radius,0.5rem)] border border-border px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted"
-            />
-            <button
-              type="submit"
-              className="rounded-[var(--sf-radius,0.5rem)] bg-brand px-6 py-3 text-sm font-medium uppercase text-brand-foreground"
-            >
-              Submit
-            </button>
-          </form>
+          <ContactForm />
         </div>
       </div>
     </main>

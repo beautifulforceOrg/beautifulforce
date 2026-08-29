@@ -137,6 +137,68 @@ test.describe("slow network", () => {
   });
 });
 
+test.describe("newsletter signup", () => {
+  test("subscribing shows a confirmation and re-subscribing the same email is harmless", async ({ page }) => {
+    const email = `e2e_newsletter_${Date.now()}@example.com`;
+    await page.goto("/");
+    // The form action handler only exists once React hydrates -- see the
+    // same fix in storefront-features.spec.ts's PLP sort test.
+    await page.waitForLoadState("networkidle");
+    await page.getByLabel("Email address").fill(email);
+    await page.getByRole("button", { name: "Subscribe" }).click();
+    await expect(page.getByText("Thanks for subscribing!")).toBeVisible();
+
+    // Re-subscribing (e.g. the user submits again, or double-clicks) must
+    // not error even though the email is already stored.
+    await page.reload();
+    await page.getByLabel("Email address").fill(email);
+    await page.getByRole("button", { name: "Subscribe" }).click();
+    await expect(page.getByText("Thanks for subscribing!")).toBeVisible();
+  });
+
+  test("rejects an invalid email server-side, not just via the browser's own validation", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    // "a@b" satisfies the browser's own lenient type="email" check (a
+    // single-label domain is technically valid per the HTML5 spec) but
+    // fails our stricter server-side regex -- proving the server action
+    // itself validates, not just the browser, without needing to hack
+    // around native form validation to get there.
+    await page.getByLabel("Email address").fill("a@b");
+    await page.getByRole("button", { name: "Subscribe" }).click();
+    await expect(page.getByText("Please enter a valid email address.")).toBeVisible();
+  });
+});
+
+test.describe("contact form", () => {
+  test("submitting a real query shows a confirmation", async ({ page }) => {
+    await page.goto("/help/contact");
+    await page.waitForLoadState("networkidle");
+    await page.getByLabel("Name", { exact: true }).fill("E2E Shopper");
+    await page.getByLabel("Email", { exact: true }).fill(`e2e_contact_${Date.now()}@example.com`);
+    await page.getByLabel("Phone", { exact: true }).fill("+91 9876543210");
+    await page.getByLabel("Comment", { exact: true }).fill("Do you have this frock in a larger size?");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.getByText("Thanks for reaching out!")).toBeVisible();
+  });
+
+  test("requires a name, and validates email server-side too", async ({ page }) => {
+    await page.goto("/help/contact");
+    await page.waitForLoadState("networkidle");
+    // A single space satisfies the browser's own `required` check (only a
+    // truly empty value fails that) but our server action trims first,
+    // so it still rejects it -- proving the server validates too, not
+    // just the browser, without needing to hack around native validation.
+    await page.getByLabel("Name", { exact: true }).fill(" ");
+    // "a@b" passes the browser's lenient type="email" check but fails our
+    // stricter server-side regex.
+    await page.getByLabel("Email", { exact: true }).fill("a@b");
+    await page.getByLabel("Comment", { exact: true }).fill("A real message.");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.getByText("Please enter your name.")).toBeVisible();
+  });
+});
+
 test.describe("input edge cases", () => {
   test("a very long review comment and emoji don't break the page", async ({ page }) => {
     const email = `e2e_long_review_${Date.now()}@example.com`;

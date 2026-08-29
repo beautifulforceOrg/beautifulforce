@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FacebookIcon, InstagramIcon } from "./icons";
+import { NewsletterForm } from "./newsletter-form";
 import { TermsPoliciesPopover } from "./terms-policies-popover";
 
 const FOR_YOU_LINKS = [
@@ -82,23 +83,7 @@ export function SiteFooter() {
 
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wide">Subscribe to our email</h3>
-          <form
-            className="mt-3 flex border-b border-border pb-1"
-            action="mailto:online.beautifulmess@gmail.com"
-            method="post"
-            encType="text/plain"
-          >
-            <input
-              type="email"
-              name="email"
-              required
-              placeholder="Email address"
-              className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
-            />
-            <button type="submit" aria-label="Subscribe" className="-mr-2.5 p-2.5 text-brand">
-              &rarr;
-            </button>
-          </form>
+          <NewsletterForm />
           <p className="mt-3 text-sm text-muted">
             Every piece we choose and create is crafted with care, blending style with comfort. We&apos;re
             proud to use the softest materials that kids adore.
