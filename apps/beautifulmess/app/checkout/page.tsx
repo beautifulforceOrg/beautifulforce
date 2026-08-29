@@ -1,11 +1,21 @@
 "use client";
 
+import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { CartSummary, formatPrice } from "@storeforge/ui";
 import { placeOrder } from "../../lib/actions";
 import { useCart } from "../../lib/cart-context";
 import { applyDiscountCode } from "../../lib/discount";
+import { buildRazorpayCheckoutOptions } from "../../lib/razorpay-checkout";
+
+// Razorpay's Checkout.js attaches this global -- there's no official
+// types package for it, so this is the minimal shape we actually use.
+declare global {
+  interface Window {
+    Razorpay?: new (options: unknown) => { open: () => void };
+  }
+}
 
 export default function CheckoutPage() {
   const { lines, clear } = useCart();
@@ -35,7 +45,7 @@ export default function CheckoutPage() {
     setError(null);
     startTransition(async () => {
       try {
-        const { gatewayOrderId } = await placeOrder(
+        const { gatewayOrderId, amount, isMocked } = await placeOrder(
           lines.map((line) => ({
             productId: line.productId,
             variantId: line.variantId,
@@ -44,8 +54,43 @@ export default function CheckoutPage() {
           })),
           appliedCode ?? undefined
         );
-        clear();
-        router.push(`/orders/${gatewayOrderId}`);
+
+        // Under E2E_MOCK_EXTERNAL_APIS, gatewayOrderId is synthetic --
+        // opening the real widget against it would fail against
+        // Razorpay's own servers, so skip straight to the order page the
+        // same way the mocked webhook flow already expects.
+        if (isMocked) {
+          clear();
+          router.push(`/orders/${gatewayOrderId}`);
+          return;
+        }
+
+        if (!window.Razorpay) {
+          throw new Error("Payment could not be loaded. Please check your connection and try again.");
+        }
+
+        const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+        if (!keyId) {
+          throw new Error("Payment is not configured for this store yet.");
+        }
+
+        const razorpay = new window.Razorpay({
+          ...buildRazorpayCheckoutOptions({ keyId, gatewayOrderId, amount }),
+          handler: () => {
+            // The webhook (app/api/webhooks/razorpay/route.ts) is the
+            // authoritative source for marking the order PAID -- this
+            // redirect is just UX, matching the order page's own PENDING
+            // state until that webhook arrives.
+            clear();
+            router.push(`/orders/${gatewayOrderId}`);
+          },
+          modal: {
+            ondismiss: () => {
+              setError("Payment was cancelled. Your order is saved -- you can try paying again from your cart.");
+            },
+          },
+        });
+        razorpay.open();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       }
@@ -54,6 +99,7 @@ export default function CheckoutPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <h1 className="font-heading mb-8 text-3xl uppercase text-foreground">Checkout</h1>
       <CartSummary lines={lines} />
 
