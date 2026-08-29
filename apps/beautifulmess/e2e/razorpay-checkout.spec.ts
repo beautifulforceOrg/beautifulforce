@@ -1,14 +1,30 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+// Next's dev server lazily compiles a route on its first visit, which can
+// trigger a Fast Refresh reload that races with this navigation and
+// aborts it (dev-only; doesn't happen against a production build) --
+// retry once rather than flake on that. Same pattern as e2e/mobile.spec.ts.
+async function gotoWithRetry(page: Page, path: string) {
+  try {
+    await page.goto(path);
+  } catch {
+    await page.goto(path);
+  }
+}
 
 // This exercises OUR integration code against a stubbed window.Razorpay --
 // not Razorpay's own hosted Checkout iframe, which isn't something a
 // headless test should try to drive. It still needs a real order to be
 // created against Razorpay's actual API (that's the whole point: proving
 // the not-mocked path works end to end), so it requires real Razorpay
-// test-mode credentials and is skipped otherwise. Once real
-// RAZORPAY_KEY_ID/SECRET/NEXT_PUBLIC_RAZORPAY_KEY_ID are set (see
-// packages/payments/README.md), remove E2E_MOCK_EXTERNAL_APIS from
-// .env.test's this-run environment (or override it) and this activates.
+// test-mode credentials and is skipped otherwise.
+//
+// Run via `pnpm run test:e2e:razorpay-real`, not the general `test:e2e`
+// -- the Next dev server is one shared process for the whole suite, so
+// E2E_MOCK_EXTERNAL_APIS has to be overridden just for this run (that
+// script does it inline) rather than made a persistent default in
+// .env.test.local, or every other checkout-related test would also
+// start hitting Razorpay's real API and break.
 const hasRealCredentials =
   process.env.E2E_MOCK_EXTERNAL_APIS !== "1" &&
   Boolean(process.env.RAZORPAY_KEY_ID) &&
@@ -48,11 +64,11 @@ test("opens the real Razorpay Checkout widget with the correct order, and comple
     window.Razorpay = FakeRazorpay;
   });
 
-  await page.goto("/products/beige-sleeveless-3d-floral-frock");
+  await gotoWithRetry(page, "/products/beige-sleeveless-3d-floral-frock");
   await page.getByRole("radio", { name: "5-6-years" }).click();
   await page.getByRole("button", { name: "Add to cart" }).click();
 
-  await page.goto("/checkout");
+  await gotoWithRetry(page, "/checkout");
   await page.getByRole("button", { name: "Pay now" }).click();
 
   await page.waitForURL(/\/orders\/.+/);
@@ -84,11 +100,11 @@ test("a cancelled payment keeps the order pending and shows a retry message, not
     window.Razorpay = FakeRazorpay;
   });
 
-  await page.goto("/products/beige-sleeveless-3d-floral-frock");
+  await gotoWithRetry(page, "/products/beige-sleeveless-3d-floral-frock");
   await page.getByRole("radio", { name: "6-7-years" }).click();
   await page.getByRole("button", { name: "Add to cart" }).click();
 
-  await page.goto("/checkout");
+  await gotoWithRetry(page, "/checkout");
   await page.getByRole("button", { name: "Pay now" }).click();
 
   await expect(page.getByText(/Payment was cancelled/)).toBeVisible();

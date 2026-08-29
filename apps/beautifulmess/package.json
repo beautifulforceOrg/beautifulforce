@@ -14,7 +14,8 @@
     "db:push": "dotenv -e .env.test -- prisma db push --schema=../../packages/db/prisma/schema.prisma --skip-generate",
     "import:catalog": "dotenv -e .env.test -- tsx scripts/import-shopify-catalog.ts",
     "pretest:e2e": "pnpm run db:push && pnpm run import:catalog",
-    "test:e2e": "dotenv -e .env.test.local -e .env.test -- playwright test"
+    "test:e2e": "dotenv -e .env.test.local -e .env.test -- playwright test",
+    "test:e2e:razorpay-real": "E2E_MOCK_EXTERNAL_APIS=0 dotenv -e .env.test.local -e .env.test -- playwright test e2e/razorpay-checkout.spec.ts"
   },
   "dependencies": {
     "@storeforge/db": "workspace:*",
