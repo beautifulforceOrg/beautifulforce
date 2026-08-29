@@ -9,6 +9,12 @@
 
 generator client {
   provider = "prisma-client-js"
+  // "native" covers local dev (macOS/Linux) and Vercel's build machine;
+  // "rhel-openssl-3.0.x" is what Vercel's serverless Lambda runtime
+  // actually reports at request time, which differs from the build
+  // machine -- without it, the query engine binary generated at build
+  // time doesn't match what's needed to run the deployed function.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
