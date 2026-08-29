@@ -19,6 +19,15 @@ test.skip(!hasRealCredentials, "requires real Razorpay test-mode credentials, se
 test("opens the real Razorpay Checkout widget with the correct order, and completes the order on payment success", async ({
   page,
 }) => {
+  // The checkout page also loads the REAL checkout.js from Razorpay's CDN.
+  // If that finishes after our stub runs, it overwrites window.Razorpay
+  // with the real constructor, and .open() then tries to open Razorpay's
+  // actual hosted iframe -- which never calls our fake handler, hanging
+  // the test. Block the real script so our stub stays in control.
+  await page.route("https://checkout.razorpay.com/v1/checkout.js", (route) =>
+    route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
+  );
+
   await page.addInitScript(() => {
     (window as unknown as { __rzpCalls: unknown[] }).__rzpCalls = [];
     class FakeRazorpay {
@@ -57,6 +66,10 @@ test("opens the real Razorpay Checkout widget with the correct order, and comple
 });
 
 test("a cancelled payment keeps the order pending and shows a retry message, not a fake success", async ({ page }) => {
+  await page.route("https://checkout.razorpay.com/v1/checkout.js", (route) =>
+    route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
+  );
+
   await page.addInitScript(() => {
     class FakeRazorpay {
       options: { modal: { ondismiss: () => void } };

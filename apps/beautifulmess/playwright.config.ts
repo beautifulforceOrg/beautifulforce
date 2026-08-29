@@ -8,7 +8,12 @@ export default defineConfig({
     baseURL: "http://localhost:3200",
   },
   webServer: {
-    command: "dotenv -e .env.test -- next dev -p 3200",
+    // .env.test.local (gitignored, see .env.test.local.example) layers
+    // real secrets -- e.g. RAZORPAY_KEY_SECRET, E2E_MOCK_EXTERNAL_APIS=0
+    // -- on top of .env.test's safe defaults, without either ever being
+    // committed. dotenv-cli tolerates the file being absent, so this is
+    // safe as the default command even when it doesn't exist yet.
+    command: "dotenv -e .env.test.local -e .env.test -- next dev -p 3200",
     url: "http://localhost:3200",
     reuseExistingServer: false,
     timeout: 120_000,

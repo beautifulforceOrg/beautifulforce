@@ -173,11 +173,23 @@ async function main() {
       });
     }
 
-    await db.productImage.deleteMany({ where: { productId: saved.id } });
-    if (product.images.length > 0) {
-      await db.productImage.createMany({
-        data: product.images.map((url, position) => ({ productId: saved.id, url, position })),
-      });
+    // scripts/migrate-images-to-imagekit.ts re-hosts these off the
+    // client's Shopify CDN after the fact -- if a re-run of this import
+    // (e.g. e2e's pretest:e2e hook) blindly reset images from the CSV
+    // every time, it would silently undo that migration on every test
+    // run. Skip the reset when every existing image for this product is
+    // already ImageKit-hosted.
+    const existingImages = await db.productImage.findMany({ where: { productId: saved.id } });
+    const alreadyMigrated =
+      existingImages.length > 0 && existingImages.every((image) => image.url.includes("ik.imagekit.io"));
+
+    if (!alreadyMigrated) {
+      await db.productImage.deleteMany({ where: { productId: saved.id } });
+      if (product.images.length > 0) {
+        await db.productImage.createMany({
+          data: product.images.map((url, position) => ({ productId: saved.id, url, position })),
+        });
+      }
     }
   }
 
