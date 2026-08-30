@@ -48,9 +48,10 @@ graph LR
   Config -.shared config.-> App
 ```
 
-A mobile client (`apps/mobile-template`, forking to `apps/<client>-mobile`
-per storefront) talks to the same storefront app over a JSON API instead
-of rendering its pages -- see diagram 10 for that architecture in detail.
+A mobile client (`apps/mobile-template`, forked as `apps/beautifulmess-mobile`
+for the first real client) talks to the same storefront app over a JSON
+API instead of rendering its pages -- see diagram 10 for that
+architecture in detail.
 
 ## 2. Package dependency graph
 
@@ -65,16 +66,19 @@ graph BT
   ui["packages/ui"]
   uinative["packages/ui-native"]
   apiclient["packages/api-client"]
+  mobileconfig["packages/mobile-config"]
   payments["packages/payments"]
   shipping["packages/shipping"]
   template["apps/_template"]
   beautifulmess["apps/beautifulmess"]
   mobiletemplate["apps/mobile-template"]
+  beautifulmessmobile["apps/beautifulmess-mobile"]
 
   db --> config
   ui --> config
   uinative --> config
   apiclient --> config
+  mobileconfig --> config
   payments --> config
   payments --> db
   shipping --> config
@@ -92,6 +96,10 @@ graph BT
   mobiletemplate --> config
   mobiletemplate --> uinative
   mobiletemplate --> apiclient
+  beautifulmessmobile --> config
+  beautifulmessmobile --> uinative
+  beautifulmessmobile --> apiclient
+  beautifulmessmobile -.type-only, see diagram 10.-> mobileconfig
 ```
 
 `packages/api-client` has no build-time dependency on `apps/beautifulmess`
@@ -370,3 +378,26 @@ polls the same `Order` row the web `/orders/:gatewayOrderId` page reads.
 Push delivery only happens if the customer is logged in and granted
 notification permission (`POST /api/mobile/push-token`); it's silently
 skipped otherwise (diagram 7).
+
+## 12. Per-client mobile config (`packages/mobile-config`)
+
+```mermaid
+graph LR
+  Config["StorefrontMobileConfig\n(appName, slug, bundleIdentifier,\nandroidPackage, easProjectId, theme)"] --> Build["buildExpoConfig()"]
+  Build --> ExpoConfig["Expo config object\n(name, ios.bundleIdentifier,\nandroid.package, extra.eas.projectId)"]
+  ExpoConfig -.iOS/Android build target.-> EAS[["EAS Build"]]
+```
+
+The mobile analogue of each web app's `app/layout.tsx` theme object --
+`apps/beautifulmess-mobile/app.config.ts` supplies Beautiful Mess's real
+bundle ID, Android package, and theme colors (matching
+`apps/beautifulmess`'s own layout). `buildExpoConfig()` implements this
+merge and has its own unit tests, but Expo's config loader executes
+`app.config.ts` directly under Node's CommonJS `require()` (outside
+Metro), and `packages/mobile-config` ships ESM source with no build
+step -- a runtime `import` of it from `app.config.ts` fails, so today
+`app.config.ts` only takes a *type-only* import from the package and
+inlines the equivalent object literal itself. `buildExpoConfig()` stays
+the source of truth for what that merge should produce; switching
+`app.config.ts` back to calling it directly is a one-line change once the
+package gains a real CJS build output.
