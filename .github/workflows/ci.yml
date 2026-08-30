@@ -60,3 +60,46 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Builds apps/mobile-template's iOS and Android preview binaries via EAS
+  # Build's cloud service -- both platforms build on this same
+  # ubuntu-latest runner, no macOS runner or local Xcode/Android Studio
+  # needed. Only runs on a push to main (not every PR) to conserve EAS's
+  # free build-minutes tier. Requires a free Expo account and an
+  # EXPO_TOKEN repository secret, neither of which CI can provision on
+  # its own -- see apps/mobile-template/README.md. Skips itself (without
+  # failing) when that secret isn't set, so this job is a safe no-op in
+  # any fork or before that one-time setup is done.
+  mobile-build:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check for EAS credentials
+        id: eas-check
+        run: echo "has_token=${{ secrets.EXPO_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: EAS build (preview, iOS + Android)
+        if: steps.eas-check.outputs.has_token == 'true'
+        working-directory: apps/mobile-template
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: pnpm exec eas build --profile preview --platform all --non-interactive --no-wait
+
+      - name: Skip notice
+        if: steps.eas-check.outputs.has_token != 'true'
+        run: |
+          echo "::notice::Skipping EAS build -- EXPO_TOKEN repository secret is not set. See apps/mobile-template/README.md for one-time setup (free Expo account + eas init + access token)."
