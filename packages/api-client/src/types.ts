@@ -53,3 +53,49 @@ export interface PushTokenRegistrationResult {
   ok: boolean;
 }
 
+export interface Collection {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+export interface ProductVariant {
+  id: string;
+  name: string;
+  value: string;
+  price: number | null;
+  inStock: boolean;
+}
+
+export interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  customerName: string | null;
+  createdAt: string;
+}
+
+export interface ProductDetail {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  price: number;
+  images: string[];
+  variants: ProductVariant[];
+  inStock: boolean;
+  ratingSummary: { average: number; count: number };
+  reviews: Review[];
+  hasReviewedAlready: boolean;
+  wishlisted: boolean;
+  completeTheLook: ProductSummary | null;
+  youMayAlsoLike: ProductSummary[];
+}
+
+export interface ContactMessageInput {
+  name: string;
+  email: string;
+  phone?: string;
+  comment: string;
+}
+

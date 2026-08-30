@@ -214,4 +214,77 @@ describe("createStorefrontApiClient", () => {
       expect(result).toEqual({ ok: true });
     });
   });
+
+  describe("catalog content parity", () => {
+    it("getCollections fetches the collection list", async () => {
+      const fetchMock = mockFetchOnce([{ id: "1", slug: "frocks", name: "Frocks" }]);
+      const client = createStorefrontApiClient("http://localhost:3000");
+
+      const result = await client.getCollections();
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/collections", {});
+      expect(result).toEqual([{ id: "1", slug: "frocks", name: "Frocks" }]);
+    });
+
+    it("getProduct fetches product detail with the Bearer header", async () => {
+      const detail = { id: "1", slug: "blue-frock", name: "Blue Frock" };
+      const fetchMock = mockFetchOnce(detail);
+      const tokenStorage = createInMemoryTokenStorage();
+      await tokenStorage.setToken("signed.token.value");
+      const client = createStorefrontApiClient("http://localhost:3000", tokenStorage);
+
+      const result = await client.getProduct("blue-frock");
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/products/blue-frock", {
+        headers: { authorization: "Bearer signed.token.value" },
+      });
+      expect(result).toEqual(detail);
+    });
+
+    it("submitReview posts rating and comment with the Bearer header", async () => {
+      const fetchMock = mockFetchOnce({});
+      const tokenStorage = createInMemoryTokenStorage();
+      await tokenStorage.setToken("signed.token.value");
+      const client = createStorefrontApiClient("http://localhost:3000", tokenStorage);
+
+      await client.submitReview("blue-frock", 5, "Lovely!");
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/products/blue-frock/reviews", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: "Bearer signed.token.value" },
+        body: JSON.stringify({ rating: 5, comment: "Lovely!" }),
+      });
+    });
+
+    it("submitReview throws a StorefrontApiError with the server's message on failure", async () => {
+      mockFetchOnce({ error: "Please choose a rating from 1 to 5." }, 400);
+      const client = createStorefrontApiClient("http://localhost:3000");
+
+      const error = await client.submitReview("blue-frock", 9, "Lovely!").catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as Error).message).toBe("Please choose a rating from 1 to 5.");
+    });
+
+    it("search encodes the query string", async () => {
+      const fetchMock = mockFetchOnce([]);
+      const client = createStorefrontApiClient("http://localhost:3000");
+
+      await client.search("blue frock");
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/search?q=blue%20frock", {});
+    });
+
+    it("submitContactMessage posts the contact form", async () => {
+      const fetchMock = mockFetchOnce({});
+      const client = createStorefrontApiClient("http://localhost:3000");
+
+      await client.submitContactMessage({ name: "Jane", email: "jane@example.com", comment: "Hello" });
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/contact", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: "Jane", email: "jane@example.com", comment: "Hello" }),
+      });
+    });
+  });
 });

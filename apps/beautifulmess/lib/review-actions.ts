@@ -1,11 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { db } from "@storeforge/db";
 import { getSessionCustomerId } from "./auth";
+import { submitReviewFor, type SubmitReviewResult as SubmitReviewCoreResult } from "./review-submission";
 
-export interface SubmitReviewResult {
-  error?: string;
+export interface SubmitReviewResult extends SubmitReviewCoreResult {
   requiresLogin?: boolean;
 }
 
@@ -20,21 +19,10 @@ export async function submitReview(
   }
 
   const rating = Number(formData.get("rating"));
-  const comment = String(formData.get("comment") ?? "").trim();
-
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return { error: "Please choose a rating from 1 to 5." };
+  const comment = String(formData.get("comment") ?? "");
+  const result = await submitReviewFor(customerId, productId, { rating, comment });
+  if (!result.error) {
+    revalidatePath(`/products/${productSlug}`);
   }
-  if (!comment) {
-    return { error: "Please write a short review." };
-  }
-
-  await db.review.upsert({
-    where: { customerId_productId: { customerId, productId } },
-    update: { rating, comment },
-    create: { customerId, productId, rating, comment },
-  });
-
-  revalidatePath(`/products/${productSlug}`);
-  return {};
+  return result;
 }

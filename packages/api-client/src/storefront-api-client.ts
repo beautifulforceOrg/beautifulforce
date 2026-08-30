@@ -2,10 +2,13 @@ import { createInMemoryTokenStorage, type TokenStorage } from "./token-storage";
 import type {
   AuthSession,
   CheckoutLine,
+  Collection,
   CollectionDetail,
   CollectionFilters,
+  ContactMessageInput,
   OrderStatus,
   PlaceOrderResult,
+  ProductDetail,
   ProductSummary,
   PushTokenRegistrationResult,
 } from "./types";
@@ -32,6 +35,13 @@ export interface StorefrontApiClient {
   placeOrder(lines: CheckoutLine[], discountCode?: string): Promise<PlaceOrderResult>;
   getOrderStatus(gatewayOrderId: string): Promise<OrderStatus>;
   registerPushToken(token: string): Promise<PushTokenRegistrationResult>;
+  getCollections(): Promise<Collection[]>;
+  getProduct(slug: string): Promise<ProductDetail>;
+  /** Throws StorefrontApiError (with the server's validation message) on failure. */
+  submitReview(slug: string, rating: number, comment: string): Promise<void>;
+  search(query: string): Promise<ProductSummary[]>;
+  /** Throws StorefrontApiError (with the server's validation message) on failure. */
+  submitContactMessage(input: ContactMessageInput): Promise<void>;
 }
 
 async function parseJsonBody(response: Response): Promise<unknown> {
@@ -131,6 +141,31 @@ export function createStorefrontApiClient(baseUrl: string, tokenStorage: TokenSt
         method: "POST",
         headers: { ...JSON_HEADERS, ...(await authHeaders()) },
         body: JSON.stringify({ token }),
+      });
+    },
+    getCollections() {
+      return requestJson<Collection[]>(`${origin}/api/mobile/collections`);
+    },
+    async getProduct(slug) {
+      return requestJson<ProductDetail>(`${origin}/api/mobile/products/${slug}`, {
+        headers: await authHeaders(),
+      });
+    },
+    async submitReview(slug, rating, comment) {
+      await requestJson(`${origin}/api/mobile/products/${slug}/reviews`, {
+        method: "POST",
+        headers: { ...JSON_HEADERS, ...(await authHeaders()) },
+        body: JSON.stringify({ rating, comment }),
+      });
+    },
+    search(query) {
+      return requestJson<ProductSummary[]>(`${origin}/api/mobile/search?q=${encodeURIComponent(query)}`);
+    },
+    async submitContactMessage(input) {
+      await requestJson(`${origin}/api/mobile/contact`, {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify(input),
       });
     },
   };

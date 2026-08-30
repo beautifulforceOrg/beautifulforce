@@ -56,7 +56,8 @@ const config: ExpoConfig = {
   web: {
     favicon: "./assets/favicon.png",
   },
-  plugins: ["expo-secure-store", "expo-web-browser"],
+  scheme: "beautifulmess",
+  plugins: ["expo-router", "expo-secure-store", "expo-web-browser"],
   extra: BEAUTIFULMESS_MOBILE_CONFIG.easProjectId ? { eas: { projectId: BEAUTIFULMESS_MOBILE_CONFIG.easProjectId } } : {},
 };
 

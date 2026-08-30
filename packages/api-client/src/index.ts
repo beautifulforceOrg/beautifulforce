@@ -8,5 +8,10 @@ export type {
   PlaceOrderResult,
   OrderStatus,
   PushTokenRegistrationResult,
+  Collection,
+  ProductVariant,
+  Review,
+  ProductDetail,
+  ContactMessageInput,
 } from "./types";
 export { createInMemoryTokenStorage, type TokenStorage } from "./token-storage";

@@ -38,7 +38,7 @@ export async function searchProducts(query: string) {
   if (!trimmed) return [];
   return db.product.findMany({
     where: { name: { contains: trimmed, mode: "insensitive" } },
-    include: { images: { orderBy: { position: "asc" }, take: 2 } },
+    include: { images: { orderBy: { position: "asc" }, take: 2 }, variants: { select: { stockQty: true } } },
     take: 24,
   });
 }
@@ -82,7 +82,7 @@ export async function getYouMayAlsoLike(productId: string, collectionIds: string
       collections: { some: { id: { in: collectionIds } } },
     },
     take: limit,
-    include: { images: { orderBy: { position: "asc" }, take: 1 } },
+    include: { images: { orderBy: { position: "asc" }, take: 1 }, variants: { select: { stockQty: true } } },
   });
 }
 
@@ -97,6 +97,6 @@ export async function getCompleteTheLook(productId: string, collectionIds: strin
 
   return db.product.findFirst({
     where,
-    include: { images: { orderBy: { position: "asc" }, take: 1 } },
+    include: { images: { orderBy: { position: "asc" }, take: 1 }, variants: { select: { stockQty: true } } },
   });
 }
