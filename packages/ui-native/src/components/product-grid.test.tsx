@@ -1,5 +1,5 @@
 import { create, act } from "react-test-renderer";
-import { Text } from "react-native";
+import { FlatList, Text } from "react-native";
 import { ThemeProvider } from "../theme/theme-provider";
 import { TEST_THEME } from "../theme/test-fixtures";
 import { ProductGrid, type GridProduct } from "./product-grid";
@@ -44,5 +44,23 @@ describe("ProductGrid", () => {
       pressables[1]!.props.onPress();
     });
     expect(onSelectProduct).toHaveBeenCalledWith("2");
+  });
+
+  it("fills its parent's remaining space, so it can actually scroll instead of collapsing to its content height", () => {
+    // Real bug this caught: with no flex on the FlatList and no
+    // ScrollView around the rest of the screen, a screen with content
+    // above the grid (a header, a login form) left the grid with no
+    // defined height -- it rendered but was clipped, showing only part
+    // of the catalog with no way to scroll to the rest.
+    let root!: ReturnType<typeof create>;
+    act(() => {
+      root = create(
+        <ThemeProvider theme={TEST_THEME}>
+          <ProductGrid products={PRODUCTS} onSelectProduct={jest.fn()} />
+        </ThemeProvider>
+      );
+    });
+    const flatList = root.root.findByType(FlatList);
+    expect(flatList.props.style).toMatchObject({ flex: 1 });
   });
 });

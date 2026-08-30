@@ -17,6 +17,7 @@ export interface ProductGridProps {
 export function ProductGrid({ products, onSelectProduct, numColumns = 2 }: ProductGridProps) {
   return (
     <FlatList
+      style={{ flex: 1 }}
       data={products}
       numColumns={numColumns}
       keyExtractor={(item) => item.id}
