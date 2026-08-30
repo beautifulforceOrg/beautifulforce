@@ -1,0 +1,10 @@
+{
+  "extends": "@storeforge/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-native",
+    "rootDir": "src",
+    "outDir": "dist",
+    "lib": ["esnext"]
+  },
+  "include": ["src"]
+}

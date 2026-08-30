@@ -1,0 +1,9 @@
+{
+  "extends": "@storeforge/config/tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "lib": ["esnext"]
+  },
+  "include": ["src"]
+}
