@@ -1,5 +1,13 @@
 import { createInMemoryTokenStorage, type TokenStorage } from "./token-storage";
-import type { AuthSession, CollectionDetail, CollectionFilters, ProductSummary } from "./types";
+import type {
+  AuthSession,
+  CheckoutLine,
+  CollectionDetail,
+  CollectionFilters,
+  OrderStatus,
+  PlaceOrderResult,
+  ProductSummary,
+} from "./types";
 
 export class StorefrontApiError extends Error {
   constructor(
@@ -20,6 +28,8 @@ export interface StorefrontApiClient {
   isLoggedIn(): Promise<boolean>;
   getWishlist(): Promise<string[]>;
   toggleWishlist(productId: string): Promise<{ wishlisted: boolean }>;
+  placeOrder(lines: CheckoutLine[], discountCode?: string): Promise<PlaceOrderResult>;
+  getOrderStatus(gatewayOrderId: string): Promise<OrderStatus>;
 }
 
 async function parseJsonBody(response: Response): Promise<unknown> {
@@ -103,6 +113,16 @@ export function createStorefrontApiClient(baseUrl: string, tokenStorage: TokenSt
         headers: { ...JSON_HEADERS, ...(await authHeaders()) },
         body: JSON.stringify({ productId }),
       });
+    },
+    async placeOrder(lines, discountCode) {
+      return requestJson<PlaceOrderResult>(`${origin}/api/mobile/orders`, {
+        method: "POST",
+        headers: { ...JSON_HEADERS, ...(await authHeaders()) },
+        body: JSON.stringify({ lines, discountCode }),
+      });
+    },
+    getOrderStatus(gatewayOrderId) {
+      return requestJson<OrderStatus>(`${origin}/api/mobile/orders/${gatewayOrderId}`);
     },
   };
 }

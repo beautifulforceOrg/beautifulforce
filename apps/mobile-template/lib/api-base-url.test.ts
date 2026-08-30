@@ -1,4 +1,3 @@
-import { afterEach, describe, expect, it } from "vitest";
 import { getApiBaseUrl } from "./api-base-url";
 
 const ORIGINAL = process.env.EXPO_PUBLIC_API_BASE_URL;

@@ -155,4 +155,45 @@ describe("createStorefrontApiClient", () => {
       expect(result).toEqual({ wishlisted: true });
     });
   });
+
+  describe("checkout", () => {
+    it("placeOrder posts the lines and discount code with the Bearer header", async () => {
+      const fetchMock = mockFetchOnce({ gatewayOrderId: "order_1", amount: 100000, isMocked: true });
+      const tokenStorage = createInMemoryTokenStorage();
+      await tokenStorage.setToken("signed.token.value");
+      const client = createStorefrontApiClient("http://localhost:3000", tokenStorage);
+
+      const lines = [{ productId: "p1", price: 100000, quantity: 1 }];
+      const result = await client.placeOrder(lines, "MESS05");
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/orders", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: "Bearer signed.token.value" },
+        body: JSON.stringify({ lines, discountCode: "MESS05" }),
+      });
+      expect(result).toEqual({ gatewayOrderId: "order_1", amount: 100000, isMocked: true });
+    });
+
+    it("placeOrder works with no Authorization header for guest checkout", async () => {
+      const fetchMock = mockFetchOnce({ gatewayOrderId: "order_1", amount: 100000, isMocked: true });
+      const client = createStorefrontApiClient("http://localhost:3000", createInMemoryTokenStorage());
+
+      await client.placeOrder([{ productId: "p1", price: 100000, quantity: 1 }]);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:3000/api/mobile/orders",
+        expect.objectContaining({ headers: { "content-type": "application/json" } })
+      );
+    });
+
+    it("getOrderStatus fetches the order's status", async () => {
+      const fetchMock = mockFetchOnce({ gatewayOrderId: "order_1", status: "PAID" });
+      const client = createStorefrontApiClient("http://localhost:3000");
+
+      const result = await client.getOrderStatus("order_1");
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/orders/order_1", {});
+      expect(result).toEqual({ gatewayOrderId: "order_1", status: "PAID" });
+    });
+  });
 });

@@ -1,16 +1,9 @@
 "use server";
 
-import { db } from "@storeforge/db";
-import { calculateCartTotal, createRazorpayOrderFromEnv } from "@storeforge/payments";
 import { getSessionCustomerId } from "./auth";
-import { applyDiscountCode } from "./discount";
+import { placeOrderFor, type CheckoutLine } from "./checkout";
 
-export interface CheckoutLine {
-  productId: string;
-  variantId?: string;
-  price: number;
-  quantity: number;
-}
+export type { CheckoutLine };
 
 /**
  * Pre-creates the Order row at PENDING, same composition as
@@ -28,30 +21,6 @@ export async function placeOrder(
   lines: CheckoutLine[],
   discountCode?: string
 ): Promise<{ gatewayOrderId: string; amount: number; isMocked: boolean }> {
-  const subtotal = calculateCartTotal(lines.map((line) => ({ price: line.price, qty: line.quantity })));
-  const discount = discountCode ? applyDiscountCode(discountCode, subtotal) : null;
-  const amount = discount?.valid ? subtotal - discount.amountOff : subtotal;
-  const receipt = `receipt_${Date.now()}`;
-  const isMocked = process.env.E2E_MOCK_EXTERNAL_APIS === "1";
-
-  const gatewayOrderId = isMocked ? `order_e2e_${Date.now()}` : (await createRazorpayOrderFromEnv({ amount, receipt })).id;
-
   const customerId = await getSessionCustomerId();
-
-  await db.order.create({
-    data: {
-      gatewayOrderId,
-      status: "PENDING",
-      customerId: customerId ?? undefined,
-      items: {
-        create: lines.map((line) => ({
-          productId: line.productId,
-          variantId: line.variantId,
-          quantity: line.quantity,
-        })),
-      },
-    },
-  });
-
-  return { gatewayOrderId, amount, isMocked };
+  return placeOrderFor(customerId, lines, discountCode);
 }

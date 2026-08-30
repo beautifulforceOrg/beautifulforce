@@ -31,3 +31,21 @@ export interface AuthSession {
   expiresInSeconds: number;
 }
 
+export interface CheckoutLine {
+  productId: string;
+  variantId?: string;
+  price: number;
+  quantity: number;
+}
+
+export interface PlaceOrderResult {
+  gatewayOrderId: string;
+  amount: number;
+  isMocked: boolean;
+}
+
+export interface OrderStatus {
+  gatewayOrderId: string;
+  status: string;
+}
+
