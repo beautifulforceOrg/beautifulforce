@@ -21,7 +21,12 @@ export function Button({ label, onPress, variant = "solid", disabled = false }: 
       style={[
         styles.base,
         {
-          backgroundColor: isOutline ? "transparent" : theme.colorBrand,
+          // A literal "transparent" background can make a Pressable fail
+          // to receive touches on Android (observed: the fully-opaque
+          // "solid" variant worked, "outline" silently didn't) -- an
+          // effectively-invisible but non-zero-alpha fill keeps the same
+          // look while staying hit-testable.
+          backgroundColor: isOutline ? "rgba(255,255,255,0.01)" : theme.colorBrand,
           borderColor: theme.colorBrand,
           borderWidth: isOutline ? 1 : 0,
           borderRadius: theme.radius ?? 8,

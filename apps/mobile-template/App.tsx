@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import * as Notifications from "expo-notifications";
 import { Button, ProductGrid, ThemeProvider, formatPrice, type StorefrontTheme } from "@storeforge/ui-native";
@@ -67,9 +68,11 @@ type Screen = "catalog" | "cart" | "order";
 
 export default function App() {
   return (
-    <CartProvider>
-      <StorefrontDemo />
-    </CartProvider>
+    <SafeAreaProvider>
+      <CartProvider>
+        <StorefrontDemo />
+      </CartProvider>
+    </SafeAreaProvider>
   );
 }
 

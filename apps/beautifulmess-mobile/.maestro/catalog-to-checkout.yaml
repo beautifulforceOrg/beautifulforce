@@ -1,0 +1,68 @@
+# Maestro E2E flow for the mobile checkout pipeline, run against a real
+# Expo Go instance on an Android emulator (or device) pointed at a live
+# apps/beautifulmess dev server. Not run in CI (needs a booted
+# emulator/simulator) -- this is for local, on-device verification of the
+# actual rendered UI, which unit tests (react-test-renderer) and
+# `expo export` builds cannot catch. Two real bugs were only found this
+# way, both confirmed fixed by hand (manual adb-driven taps + screenshots,
+# see the commit this file was added in): ProductGrid's FlatList missing
+# flex:1 (clipped the catalog to half the screen) and react-native's own
+# SafeAreaView being a no-op on Android (the header rendered under the
+# status bar, creating a touch-dead-zone that silently ate the Cart
+# button's taps).
+#
+# Known flaky in this sandbox: Maestro's own tapOn (both text-selector and
+# coordinate forms) intermittently failed to register a press on this
+# specific Expo-Go-hosted, Compose-activity Android emulator build, even
+# though the identical coordinates worked reliably via plain
+# `adb shell input tap`. Not yet root-caused -- a plausible lead is
+# Maestro/UiAutomator dispatching an accessibility ACTION_CLICK rather
+# than a raw touch event for element-based taps, which React Native's
+# gesture responder system may not treat the same as a real touch. Worth
+# retrying on a real device or a different emulator image before
+# concluding it's unfixable; the flow below is written the idiomatic way
+# (accessible-label selectors) on the assumption this is a local
+# tooling/environment quirk, not something to design the app around.
+#
+# Usage:
+#   1. Start apps/beautifulmess's dev server.
+#   2. Start this app via `expo start --android` (or scan the QR code on
+#      a real device) so Expo Go has it loaded.
+#   3. `adb shell pm clear host.exp.exponent` -- the cart persists via
+#      AsyncStorage across runs, same as a real device; without this the
+#      "Cart (0)" assertion below fails on any but the very first run.
+#   4. maestro test .maestro/catalog-to-checkout.yaml
+appId: host.exp.exponent
+env:
+  METRO_URL: exp://10.0.2.2:8081
+---
+- launchApp
+# launchApp resets Expo Go to its own home screen, not whatever project
+# was last loaded -- deep-link back into ours explicitly. 10.0.2.2 is the
+# Android emulator's alias for the host machine; override METRO_URL for a
+# real device (its LAN IP) via `maestro test -e METRO_URL=exp://... `.
+- openLink: ${METRO_URL}
+- assertVisible: "Beautiful Mess"
+- assertVisible: "Tap a product to add it to your cart."
+- assertVisible: "Cart (0)"
+# The catalog briefly shows placeholder products before the real API
+# fetch resolves -- wait for real data before tapping. ProductCard sets
+# accessibilityLabel="<name>, <price>", which the real catalog's product
+# names/prices vary by seeded data -- update this if the fixture data
+# changes.
+- extendedWaitUntil:
+    visible: "SLING BAGS"
+    timeout: 10000
+- tapOn:
+    text: "SLING BAGS, ₹1,500"
+    index: 0
+- assertVisible: "Cart (1)"
+- tapOn: "Cart (1)"
+- assertVisible: "Checkout"
+- tapOn: "Checkout"
+# Under E2E_MOCK_EXTERNAL_APIS=1 (this repo's dev/test default), checkout
+# skips straight to the order screen with a real gatewayOrderId.
+- assertVisible: "Order order_"
+- assertVisible: "Status:"
+- tapOn: "Back to shop"
+- assertVisible: "Cart (0)"
