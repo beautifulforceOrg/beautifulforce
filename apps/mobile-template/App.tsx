@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { SafeAreaView, StyleSheet, Text } from "react-native";
 import { Button, ProductGrid, ThemeProvider, type StorefrontTheme } from "@storeforge/ui-native";
+import { createStorefrontApiClient, type ProductSummary } from "@storeforge/api-client";
+import { getApiBaseUrl } from "./lib/api-base-url";
 
 // Two placeholder StorefrontTheme objects -- standing in for what a real
 // client config (e.g. Beautiful Mess's) will supply. Swapping which one is
@@ -28,15 +30,41 @@ const THEME_B: StorefrontTheme = {
   radius: 2,
 };
 
-const PLACEHOLDER_PRODUCTS = [
-  { id: "1", name: "Blue Frock", price: 550000 },
-  { id: "2", name: "Sling Bag", price: 150000 },
-  { id: "3", name: "Bow Hairclip", price: 45000 },
-  { id: "4", name: "Canvas Sneakers", price: 320000 },
+// Shown while the real catalog is loading, and as a fallback if
+// apps/beautifulmess's dev server isn't reachable -- keeps the theming
+// demo from Phase 1 working with zero backend.
+const PLACEHOLDER_PRODUCTS: ProductSummary[] = [
+  { id: "1", slug: "blue-frock", name: "Blue Frock", price: 550000, inStock: true },
+  { id: "2", slug: "sling-bag", name: "Sling Bag", price: 150000, inStock: true },
+  { id: "3", slug: "bow-hairclip", name: "Bow Hairclip", price: 45000, inStock: true },
+  { id: "4", slug: "canvas-sneakers", name: "Canvas Sneakers", price: 320000, inStock: true },
 ];
 
 export default function App() {
   const [theme, setTheme] = useState(THEME_A);
+  const [products, setProducts] = useState<ProductSummary[]>(PLACEHOLDER_PRODUCTS);
+  const [status, setStatus] = useState<"loading" | "live" | "offline">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    const client = createStorefrontApiClient(getApiBaseUrl());
+
+    client
+      .getFeaturedProducts()
+      .then((fetched) => {
+        if (cancelled) return;
+        setProducts(fetched);
+        setStatus("live");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setStatus("offline");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -45,7 +73,12 @@ export default function App() {
           label={theme === THEME_A ? "Switch to Theme B" : "Switch to Theme A"}
           onPress={() => setTheme((current) => (current === THEME_A ? THEME_B : THEME_A))}
         />
-        <ProductGrid products={PLACEHOLDER_PRODUCTS} onSelectProduct={() => {}} />
+        {status === "offline" ? (
+          <Text style={{ color: theme.colorForeground, fontFamily: theme.fontSans }}>
+            Showing placeholder products -- couldn&apos;t reach the storefront API.
+          </Text>
+        ) : null}
+        <ProductGrid products={products} onSelectProduct={() => {}} />
         <StatusBar style="auto" />
       </SafeAreaView>
     </ThemeProvider>
