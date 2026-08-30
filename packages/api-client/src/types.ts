@@ -25,3 +25,9 @@ export interface CollectionFilters {
   minPrice?: number;
   maxPrice?: number;
 }
+
+export interface AuthSession {
+  token: string;
+  expiresInSeconds: number;
+}
+

@@ -1,4 +1,5 @@
-import type { CollectionDetail, CollectionFilters, ProductSummary } from "./types";
+import { createInMemoryTokenStorage, type TokenStorage } from "./token-storage";
+import type { AuthSession, CollectionDetail, CollectionFilters, ProductSummary } from "./types";
 
 export class StorefrontApiError extends Error {
   constructor(
@@ -13,12 +14,23 @@ export class StorefrontApiError extends Error {
 export interface StorefrontApiClient {
   getFeaturedProducts(): Promise<ProductSummary[]>;
   getCollection(slug: string, filters?: CollectionFilters): Promise<CollectionDetail>;
+  logIn(email: string, password: string): Promise<void>;
+  signUp(email: string, password: string, name?: string): Promise<void>;
+  logOut(): Promise<void>;
+  isLoggedIn(): Promise<boolean>;
+  getWishlist(): Promise<string[]>;
+  toggleWishlist(productId: string): Promise<{ wishlisted: boolean }>;
 }
 
-async function requestJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
+async function parseJsonBody(response: Response): Promise<unknown> {
+  return response.json().catch(() => null);
+}
+
+async function requestJson<T>(url: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch(url, init);
   if (!response.ok) {
-    throw new StorefrontApiError(`Request to ${url} failed with status ${response.status}`, response.status);
+    const body = (await parseJsonBody(response)) as { error?: string } | null;
+    throw new StorefrontApiError(body?.error ?? `Request to ${url} failed with status ${response.status}`, response.status);
   }
   return (await response.json()) as T;
 }
@@ -33,11 +45,22 @@ function buildCollectionQuery(filters: CollectionFilters): string {
   return query ? `?${query}` : "";
 }
 
+const JSON_HEADERS = { "content-type": "application/json" };
+
 // A base URL, not a shared singleton client -- each storefront app points
 // this at its own apps/<client>'s deployment, matching the per-storefront
 // isolation model (own DB/domain/Vercel project) described in CLAUDE.md.
-export function createStorefrontApiClient(baseUrl: string): StorefrontApiClient {
+export function createStorefrontApiClient(baseUrl: string, tokenStorage: TokenStorage = createInMemoryTokenStorage()): StorefrontApiClient {
   const origin = baseUrl.replace(/\/$/, "");
+
+  async function authHeaders(): Promise<Record<string, string>> {
+    const token = await tokenStorage.getToken();
+    return token ? { authorization: `Bearer ${token}` } : {};
+  }
+
+  async function storeSession(session: AuthSession): Promise<void> {
+    await tokenStorage.setToken(session.token);
+  }
 
   return {
     getFeaturedProducts() {
@@ -45,6 +68,41 @@ export function createStorefrontApiClient(baseUrl: string): StorefrontApiClient 
     },
     getCollection(slug, filters = {}) {
       return requestJson<CollectionDetail>(`${origin}/api/mobile/collections/${slug}${buildCollectionQuery(filters)}`);
+    },
+    async logIn(email, password) {
+      const session = await requestJson<AuthSession>(`${origin}/api/mobile/auth/login`, {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ email, password }),
+      });
+      await storeSession(session);
+    },
+    async signUp(email, password, name) {
+      const session = await requestJson<AuthSession>(`${origin}/api/mobile/auth/signup`, {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ email, password, name }),
+      });
+      await storeSession(session);
+    },
+    async logOut() {
+      await tokenStorage.clearToken();
+    },
+    async isLoggedIn() {
+      return (await tokenStorage.getToken()) !== null;
+    },
+    async getWishlist() {
+      const { productIds } = await requestJson<{ productIds: string[] }>(`${origin}/api/mobile/wishlist`, {
+        headers: await authHeaders(),
+      });
+      return productIds;
+    },
+    async toggleWishlist(productId) {
+      return requestJson<{ wishlisted: boolean }>(`${origin}/api/mobile/wishlist`, {
+        method: "POST",
+        headers: { ...JSON_HEADERS, ...(await authHeaders()) },
+        body: JSON.stringify({ productId }),
+      });
     },
   };
 }

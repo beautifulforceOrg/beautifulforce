@@ -6,13 +6,18 @@ import { signUp } from "../../../lib/account-actions";
 
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
     setError(null);
-    startTransition(async () => {
-      const result = await signUp(formData);
-      if (result?.error) setError(result.error);
+    setIsSubmitting(true);
+    startTransition(() => {
+      signUp(formData)
+        .then((result) => {
+          if (result?.error) setError(result.error);
+        })
+        .finally(() => setIsSubmitting(false));
     });
   }
 
@@ -44,10 +49,10 @@ export default function SignupPage() {
         {error ? <p style={{ color: "#B91C1C" }} className="text-sm">{error}</p> : null}
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isSubmitting}
           className="w-full rounded-[var(--sf-radius,0.5rem)] bg-brand py-2.5 text-sm font-medium uppercase text-brand-foreground disabled:opacity-50"
         >
-          {isPending ? "Creating account..." : "Create account"}
+          {isSubmitting ? "Creating account..." : "Create account"}
         </button>
       </form>
       <p className="mt-6 text-sm text-muted">

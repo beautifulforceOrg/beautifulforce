@@ -6,19 +6,24 @@ import { submitContactMessage } from "../../../lib/contact-actions";
 export function ContactForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
 
   function handleSubmit(formData: FormData) {
     setError(null);
-    startTransition(async () => {
-      const result = await submitContactMessage(formData);
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      setSubmitted(true);
-      formRef.current?.reset();
+    setIsSubmitting(true);
+    startTransition(() => {
+      submitContactMessage(formData)
+        .then((result) => {
+          if (result.error) {
+            setError(result.error);
+            return;
+          }
+          setSubmitted(true);
+          formRef.current?.reset();
+        })
+        .finally(() => setIsSubmitting(false));
     });
   }
 
@@ -35,7 +40,7 @@ export function ContactForm() {
           required
           placeholder="Name"
           aria-label="Name"
-          disabled={isPending}
+          disabled={isSubmitting}
           className="rounded-[var(--sf-radius,0.5rem)] border border-border px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted disabled:opacity-50"
         />
         <input
@@ -44,7 +49,7 @@ export function ContactForm() {
           required
           placeholder="Email"
           aria-label="Email"
-          disabled={isPending}
+          disabled={isSubmitting}
           className="rounded-[var(--sf-radius,0.5rem)] border border-border px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted disabled:opacity-50"
         />
       </div>
@@ -53,7 +58,7 @@ export function ContactForm() {
         name="phone"
         placeholder="Phone"
         aria-label="Phone"
-        disabled={isPending}
+        disabled={isSubmitting}
         className="w-full rounded-[var(--sf-radius,0.5rem)] border border-border px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted disabled:opacity-50"
       />
       <textarea
@@ -62,7 +67,7 @@ export function ContactForm() {
         required
         placeholder="Comment"
         aria-label="Comment"
-        disabled={isPending}
+        disabled={isSubmitting}
         className="w-full rounded-[var(--sf-radius,0.5rem)] border border-border px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted disabled:opacity-50"
       />
       {error ? (
@@ -72,10 +77,10 @@ export function ContactForm() {
       ) : null}
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isSubmitting}
         className="rounded-[var(--sf-radius,0.5rem)] bg-brand px-6 py-3 text-sm font-medium uppercase text-brand-foreground disabled:opacity-50"
       >
-        {isPending ? "Submitting..." : "Submit"}
+        {isSubmitting ? "Submitting..." : "Submit"}
       </button>
     </form>
   );

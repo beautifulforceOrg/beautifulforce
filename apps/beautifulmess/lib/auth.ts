@@ -45,3 +45,15 @@ export async function getSessionCustomerId(): Promise<string | null> {
   if (!raw) return null;
   return verifySessionToken(raw);
 }
+
+// The mobile counterpart to getSessionCustomerId() -- mobile has no
+// cookie jar, so its session token travels as an `Authorization: Bearer`
+// header instead (see app/api/mobile/auth/**/route.ts). Both paths verify
+// the exact same token format via the same verifySessionToken().
+export function getCustomerIdFromAuthHeader(request: Request): string | null {
+  const header = request.headers.get("authorization");
+  if (!header?.startsWith("Bearer ")) return null;
+  const token = header.slice("Bearer ".length).trim();
+  if (!token) return null;
+  return verifySessionToken(token);
+}

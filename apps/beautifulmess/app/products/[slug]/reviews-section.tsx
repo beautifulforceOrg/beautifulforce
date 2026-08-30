@@ -37,10 +37,11 @@ export function ReviewsSection({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(hasReviewedAlready);
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, startTransition] = useTransition();
   const summary = summarizeRatings(reviews.map((r) => r.rating));
   // A ref, not state, so a second click arriving before React commits the
-  // `isPending` update (the `disabled` prop lags one render behind a
+  // `isSubmitting` update (the `disabled` prop lags one render behind a
   // synchronous double-click) is still caught immediately.
   const submitInFlight = useRef(false);
 
@@ -48,19 +49,23 @@ export function ReviewsSection({
     if (submitInFlight.current) return;
     submitInFlight.current = true;
     setError(null);
-    startTransition(async () => {
-      const result = await submitReview(productId, productSlug, formData);
-      if (result.requiresLogin) {
-        router.push("/account/login");
-        return;
-      }
-      if (result.error) {
-        submitInFlight.current = false;
-        setError(result.error);
-        return;
-      }
-      setSubmitted(true);
-      router.refresh();
+    setIsSubmitting(true);
+    startTransition(() => {
+      submitReview(productId, productSlug, formData)
+        .then((result) => {
+          if (result.requiresLogin) {
+            router.push("/account/login");
+            return;
+          }
+          if (result.error) {
+            submitInFlight.current = false;
+            setError(result.error);
+            return;
+          }
+          setSubmitted(true);
+          router.refresh();
+        })
+        .finally(() => setIsSubmitting(false));
     });
   }
 
@@ -118,10 +123,10 @@ export function ReviewsSection({
           {error ? <p style={{ color: "#B91C1C" }} className="text-sm">{error}</p> : null}
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isSubmitting}
             className="rounded-[var(--sf-radius,0.5rem)] bg-brand px-6 py-2.5 text-sm font-medium uppercase text-brand-foreground disabled:opacity-50"
           >
-            {isPending ? "Submitting..." : "Submit review"}
+            {isSubmitting ? "Submitting..." : "Submit review"}
           </button>
         </form>
       )}

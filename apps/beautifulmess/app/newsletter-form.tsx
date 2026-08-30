@@ -6,19 +6,24 @@ import { subscribeToNewsletter } from "../lib/newsletter-actions";
 export function NewsletterForm() {
   const [error, setError] = useState<string | null>(null);
   const [subscribed, setSubscribed] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
 
   function handleSubmit(formData: FormData) {
     setError(null);
-    startTransition(async () => {
-      const result = await subscribeToNewsletter(formData);
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      setSubscribed(true);
-      formRef.current?.reset();
+    setIsSubmitting(true);
+    startTransition(() => {
+      subscribeToNewsletter(formData)
+        .then((result) => {
+          if (result.error) {
+            setError(result.error);
+            return;
+          }
+          setSubscribed(true);
+          formRef.current?.reset();
+        })
+        .finally(() => setIsSubmitting(false));
     });
   }
 
@@ -35,10 +40,10 @@ export function NewsletterForm() {
           required
           placeholder="Email address"
           aria-label="Email address"
-          disabled={isPending}
+          disabled={isSubmitting}
           className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted disabled:opacity-50"
         />
-        <button type="submit" aria-label="Subscribe" disabled={isPending} className="-mr-2.5 p-2.5 text-brand disabled:opacity-50">
+        <button type="submit" aria-label="Subscribe" disabled={isSubmitting} className="-mr-2.5 p-2.5 text-brand disabled:opacity-50">
           &rarr;
         </button>
       </form>

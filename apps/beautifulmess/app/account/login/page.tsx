@@ -6,13 +6,18 @@ import { logIn } from "../../../lib/account-actions";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
     setError(null);
-    startTransition(async () => {
-      const result = await logIn(formData);
-      if (result?.error) setError(result.error);
+    setIsSubmitting(true);
+    startTransition(() => {
+      logIn(formData)
+        .then((result) => {
+          if (result?.error) setError(result.error);
+        })
+        .finally(() => setIsSubmitting(false));
     });
   }
 
@@ -37,10 +42,10 @@ export default function LoginPage() {
         {error ? <p style={{ color: "#B91C1C" }} className="text-sm">{error}</p> : null}
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isSubmitting}
           className="w-full rounded-[var(--sf-radius,0.5rem)] bg-brand py-2.5 text-sm font-medium uppercase text-brand-foreground disabled:opacity-50"
         >
-          {isPending ? "Logging in..." : "Log in"}
+          {isSubmitting ? "Logging in..." : "Log in"}
         </button>
       </form>
       <p className="mt-6 text-sm text-muted">

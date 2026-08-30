@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@storeforge/db";
 import { createSession, destroySession, getSessionCustomerId, hashPassword, verifyPassword } from "./auth";
+import { toggleWishlistFor } from "./wishlist";
 
 export interface AuthResult {
   error?: string;
@@ -58,15 +59,5 @@ export async function toggleWishlist(productId: string): Promise<{ wishlisted: b
     return { wishlisted: false, requiresLogin: true };
   }
 
-  const existing = await db.wishlistItem.findUnique({
-    where: { customerId_productId: { customerId, productId } },
-  });
-
-  if (existing) {
-    await db.wishlistItem.delete({ where: { id: existing.id } });
-    return { wishlisted: false };
-  }
-
-  await db.wishlistItem.create({ data: { customerId, productId } });
-  return { wishlisted: true };
+  return toggleWishlistFor(customerId, productId);
 }

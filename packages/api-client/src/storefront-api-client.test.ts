@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createStorefrontApiClient, StorefrontApiError } from "./storefront-api-client";
+import { createInMemoryTokenStorage } from "./token-storage";
 
 function mockFetchOnce(body: unknown, status = 200) {
   const fetchMock = vi.fn().mockResolvedValue({
@@ -23,7 +24,7 @@ describe("createStorefrontApiClient", () => {
     const client = createStorefrontApiClient("http://localhost:3000");
     const result = await client.getFeaturedProducts();
 
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/products");
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/products", {});
     expect(result).toEqual(products);
   });
 
@@ -31,7 +32,7 @@ describe("createStorefrontApiClient", () => {
     const fetchMock = mockFetchOnce([]);
     const client = createStorefrontApiClient("http://localhost:3000/");
     await client.getFeaturedProducts();
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/products");
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/products", {});
   });
 
   it("getCollection encodes sort/availability/price filters as query params", async () => {
@@ -47,7 +48,8 @@ describe("createStorefrontApiClient", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:3000/api/mobile/collections/frocks?sort=price-ascending&availability=in-stock&minPrice=500&maxPrice=2000"
+      "http://localhost:3000/api/mobile/collections/frocks?sort=price-ascending&availability=in-stock&minPrice=500&maxPrice=2000",
+      {}
     );
     expect(result).toEqual(collection);
   });
@@ -56,7 +58,7 @@ describe("createStorefrontApiClient", () => {
     const fetchMock = mockFetchOnce({ id: "1", slug: "frocks", name: "Frocks", products: [] });
     const client = createStorefrontApiClient("http://localhost:3000");
     await client.getCollection("frocks");
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/collections/frocks");
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/collections/frocks", {});
   });
 
   it("throws a StorefrontApiError with the response status on a non-2xx response", async () => {
@@ -66,5 +68,91 @@ describe("createStorefrontApiClient", () => {
     const error = await client.getCollection("does-not-exist").catch((e: unknown) => e);
     expect(error).toBeInstanceOf(StorefrontApiError);
     expect((error as InstanceType<typeof StorefrontApiError>).status).toBe(404);
+    expect((error as Error).message).toBe("Collection not found");
+  });
+
+  describe("auth", () => {
+    it("logIn posts credentials and persists the returned token", async () => {
+      const fetchMock = mockFetchOnce({ token: "signed.token.value", expiresInSeconds: 2592000 });
+      const tokenStorage = createInMemoryTokenStorage();
+      const client = createStorefrontApiClient("http://localhost:3000", tokenStorage);
+
+      await client.logIn("shopper@example.com", "correct horse battery");
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: "shopper@example.com", password: "correct horse battery" }),
+      });
+      expect(await tokenStorage.getToken()).toBe("signed.token.value");
+      expect(await client.isLoggedIn()).toBe(true);
+    });
+
+    it("signUp posts the new account and persists the returned token", async () => {
+      mockFetchOnce({ token: "signed.token.value", expiresInSeconds: 2592000 });
+      const tokenStorage = createInMemoryTokenStorage();
+      const client = createStorefrontApiClient("http://localhost:3000", tokenStorage);
+
+      await client.signUp("shopper@example.com", "correct horse battery", "Shopper");
+
+      expect(await tokenStorage.getToken()).toBe("signed.token.value");
+    });
+
+    it("logOut clears the persisted token", async () => {
+      const tokenStorage = createInMemoryTokenStorage();
+      await tokenStorage.setToken("signed.token.value");
+      const client = createStorefrontApiClient("http://localhost:3000", tokenStorage);
+
+      await client.logOut();
+
+      expect(await tokenStorage.getToken()).toBeNull();
+      expect(await client.isLoggedIn()).toBe(false);
+    });
+
+    it("isLoggedIn is false with no stored token", async () => {
+      const client = createStorefrontApiClient("http://localhost:3000", createInMemoryTokenStorage());
+      expect(await client.isLoggedIn()).toBe(false);
+    });
+  });
+
+  describe("wishlist", () => {
+    it("getWishlist attaches the stored token as a Bearer header", async () => {
+      const fetchMock = mockFetchOnce({ productIds: ["p1", "p2"] });
+      const tokenStorage = createInMemoryTokenStorage();
+      await tokenStorage.setToken("signed.token.value");
+      const client = createStorefrontApiClient("http://localhost:3000", tokenStorage);
+
+      const result = await client.getWishlist();
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/wishlist", {
+        headers: { authorization: "Bearer signed.token.value" },
+      });
+      expect(result).toEqual(["p1", "p2"]);
+    });
+
+    it("getWishlist sends no Authorization header when logged out", async () => {
+      const fetchMock = mockFetchOnce({ productIds: [] });
+      const client = createStorefrontApiClient("http://localhost:3000", createInMemoryTokenStorage());
+
+      await client.getWishlist();
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/wishlist", { headers: {} });
+    });
+
+    it("toggleWishlist posts the productId with the Bearer header", async () => {
+      const fetchMock = mockFetchOnce({ wishlisted: true });
+      const tokenStorage = createInMemoryTokenStorage();
+      await tokenStorage.setToken("signed.token.value");
+      const client = createStorefrontApiClient("http://localhost:3000", tokenStorage);
+
+      const result = await client.toggleWishlist("product_1");
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/wishlist", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: "Bearer signed.token.value" },
+        body: JSON.stringify({ productId: "product_1" }),
+      });
+      expect(result).toEqual({ wishlisted: true });
+    });
   });
 });
