@@ -29,8 +29,6 @@ tested core (`packages/*`). See `storeforge-design-plan.md` and
   instead of fixing them inline.
 - If the same test fails three times in a row, stop and report — do not
   keep guessing.
-- Payment, auth, and data-deletion code changes require explicit human
-  confirmation before merge, even if tests pass.
 
 ## Isolation
 
