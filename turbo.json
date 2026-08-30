@@ -49,6 +49,9 @@
     "@storeforge/template-storefront#test:e2e": {
       "dependsOn": ["^build", "@storeforge/db#db:push"],
       "cache": false
+    },
+    "@storeforge/beautifulsilver#typecheck": {
+      "dependsOn": ["^build", "@storeforge/beautifulsilver#build", "@storeforge/db#db:generate"]
     }
   }
 }

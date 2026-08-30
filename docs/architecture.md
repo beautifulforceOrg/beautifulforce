@@ -71,6 +71,7 @@ graph BT
   shipping["packages/shipping"]
   template["apps/_template"]
   beautifulmess["apps/beautifulmess"]
+  beautifulsilver["apps/beautifulsilver"]
   mobiletemplate["apps/mobile-template"]
   beautifulmessmobile["apps/beautifulmess-mobile"]
 
@@ -93,6 +94,11 @@ graph BT
   beautifulmess --> ui
   beautifulmess --> payments
   beautifulmess --> shipping
+  beautifulsilver --> config
+  beautifulsilver --> db
+  beautifulsilver --> ui
+  beautifulsilver --> payments
+  beautifulsilver --> shipping
   mobiletemplate --> config
   mobiletemplate --> uinative
   mobiletemplate --> apiclient
@@ -144,12 +150,12 @@ differ:
   lazily, on the webhook, and relies on `Order.gatewayOrderId`'s unique
   constraint (P2002) for idempotency. This is what a storefront gets by
   re-exporting `POST` from `@storeforge/payments` directly.
-- `apps/_template` and `apps/beautifulmess` instead pre-create the order at
-  `PENDING` when checkout starts, so their own webhook routes compose
-  `verifyRazorpaySignature` with an `updateMany({ where: { status:
-  "PENDING" } })` instead -- idempotent because a redelivery finds no
-  matching row to update. See `app/api/webhooks/razorpay/route.ts` in
-  either app.
+- `apps/_template`, `apps/beautifulmess`, and `apps/beautifulsilver` instead
+  pre-create the order at `PENDING` when checkout starts, so their own
+  webhook routes compose `verifyRazorpaySignature` with an
+  `updateMany({ where: { status: "PENDING" } })` instead -- idempotent
+  because a redelivery finds no matching row to update. See
+  `app/api/webhooks/razorpay/route.ts` in any of the three apps.
 
 `packages/shipping`'s handler always updates (never creates), so it
 composes with either model unchanged.

@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: var(--sf-color-background);
+  color: var(--sf-color-foreground);
+}
+
+/* Keyboard-focus visibility for form controls, matching the fix already
+   applied in apps/beautifulmess -- Tailwind's outline-none utility (used by
+   packages/ui's inputs) leaves no replacement focus indicator otherwise. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--sf-color-brand, #3a4a63);
+  outline-offset: 2px;
+}
