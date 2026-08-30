@@ -27,6 +27,11 @@ export default async function OrderStatusPage({
       <p className="mt-6 text-foreground" data-testid="order-status">
         Status: {order.status}
       </p>
+      {order.awbCode ? (
+        <p className="mt-2 text-muted" data-testid="order-tracking">
+          Tracking: {order.courierName ?? "Courier"} &mdash; AWB {order.awbCode}
+        </p>
+      ) : null}
     </main>
   );
 }

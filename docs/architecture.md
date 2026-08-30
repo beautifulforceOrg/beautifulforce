@@ -123,15 +123,19 @@ sequenceDiagram
   participant SR as Shiprocket
 
   C->>App: Browse catalog, add to cart (localStorage)
-  C->>App: Checkout -> placeOrder()
+  C->>App: Checkout -> fills shipping address (AddressForm, packages/ui)
+  C->>App: placeOrder(lines, address)
   App->>RP: create order (skipped for a synthetic id under E2E_MOCK_EXTERNAL_APIS)
   RP-->>App: gatewayOrderId
-  App->>DB: Order.create(status=PENDING, items)
+  App->>DB: Order.create(status=PENDING, items, shipTo*)
   App-->>C: redirect to /orders/:gatewayOrderId
 
   RP->>App: webhook: payment.captured
   App->>App: verifyRazorpaySignature()
   App->>DB: Order.update(status=PAID) -- idempotent
+  App->>SR: createShipment(shipTo, items) -- lib/shipping.ts, skipped if no address on file
+  SR-->>App: shipmentId, awbCode, courierName
+  App->>DB: Order.update(shipmentId, awbCode, courierName)
   App-->>RP: 200
 
   SR->>App: webhook: courier status update
@@ -216,6 +220,16 @@ notifications (diagram 11) -- one token per customer, set by a mobile app
 via `POST /api/mobile/push-token` after login. Not a separate table: this
 reference app models one active device per customer, not a device list.
 
+`Order` gained `shipTo*` fields (name, email, phone, addressLine1(+2),
+city, state, pincode) and `shipmentId`/`awbCode`/`courierName` -- all
+nullable -- when the Shiprocket integration was completed (diagram 3):
+Shiprocket's `createShipment` API needs a finished destination address
+per order and doesn't collect one itself, so each storefront's checkout
+now collects it (`packages/ui`'s `AddressForm`, backed by Google Places
+Autocomplete) and stores it directly on `Order` rather than a separate
+`Address` model, since nothing reuses a saved address across orders yet.
+See `packages/shipping/README.md`.
+
 ## 5. `packages/ui` theming flow
 
 ```mermaid
@@ -223,7 +237,7 @@ graph LR
   Theme["StorefrontTheme object\n(colors, fonts, radius, logo)"] --> Provider[ThemeProvider]
   Provider -->|sets CSS variables| Wrapper["Wrapping &lt;div&gt; style"]
   Wrapper --> Tailwind["Tailwind tokens\nbg-brand, font-heading, ..."]
-  Tailwind --> Components["Button, ProductGrid, CartSummary,\nCheckoutSteps, VariantPicker"]
+  Tailwind --> Components["Button, ProductGrid, CartSummary,\nCheckoutSteps, VariantPicker, AddressForm"]
 ```
 
 No component reads a color/font literal directly -- swapping the theme

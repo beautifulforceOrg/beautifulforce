@@ -5,11 +5,11 @@ export default defineConfig({
   fullyParallel: false,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:3200",
+    baseURL: "http://localhost:3300",
   },
   webServer: {
-    command: "dotenv -e .env.test -- next dev -p 3200",
-    url: "http://localhost:3200",
+    command: "dotenv -e .env.test -- next dev -p 3300",
+    url: "http://localhost:3300",
     reuseExistingServer: false,
     timeout: 120_000,
   },

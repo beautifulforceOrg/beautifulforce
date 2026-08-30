@@ -1,4 +1,15 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+
+async function fillCheckoutAddress(page: Page) {
+  await page.getByLabel("Full name").fill("Priya Nair");
+  await page.getByLabel("Email", { exact: true }).fill("priya@example.com");
+  await page.getByLabel("Phone number").fill("9999999999");
+  await page.getByLabel("Address", { exact: true }).fill("221 Residency Road");
+  await page.getByLabel("Flat, house number, floor, or landmark").fill("Flat 12");
+  await page.getByLabel("City").fill("Bengaluru");
+  await page.getByLabel("State").fill("Karnataka");
+  await page.getByLabel("Pincode").fill("560025");
+}
 
 test.describe("404 / error states", () => {
   test("an unknown product slug shows a real 404, not a crash", async ({ page }) => {
@@ -47,6 +58,9 @@ test.describe("keyboard-only navigation", () => {
     await page.getByRole("link", { name: "Checkout" }).focus();
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/checkout$/);
+
+    await fillCheckoutAddress(page);
+    await expect(page.getByRole("button", { name: "Pay now" })).toBeEnabled();
   });
 
   test("a product accordion can be opened with the keyboard", async ({ page }) => {
@@ -131,6 +145,7 @@ test.describe("slow network", () => {
     await expect(page.getByRole("button", { name: "Added to cart" })).toBeVisible({ timeout: 15000 });
 
     await page.goto("/checkout");
+    await fillCheckoutAddress(page);
     await page.getByRole("button", { name: "Pay now" }).click();
     await page.waitForURL(/\/orders\/.+/, { timeout: 15000 });
     await expect(page.getByTestId("order-status")).toHaveText("Status: PENDING");

@@ -163,8 +163,31 @@ model Order {
   gatewayOrderId String?     @unique // Razorpay order id -- the webhook idempotency key
   status         OrderStatus @default(PENDING)
   items          OrderItem[]
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  // Collected at checkout and handed to packages/shipping's
+  // createShipment() once payment is captured -- Shiprocket's API expects
+  // a finished address per order, it doesn't collect one itself. Nullable
+  // because existing rows predate this field and guest checkout without
+  // shipping isn't enforced at the DB layer (the checkout UI requires it).
+  shipToName         String?
+  shipToEmail        String?
+  shipToPhone        String?
+  // The Google Places Autocomplete-selected address (street number + route).
+  shipToAddressLine1 String?
+  // Free text for anything Google's autocomplete doesn't capture -- flat/
+  // house/villa number, floor, building name, a landmark -- entered by hand
+  // alongside the autocomplete field, not parsed from it.
+  shipToAddressLine2 String?
+  shipToCity         String?
+  shipToState        String?
+  shipToPincode      String?
+  // Set once createShipment() succeeds -- also doubles as the idempotency
+  // guard against creating a second shipment on a redelivered payment
+  // webhook (see app/api/webhooks/razorpay/route.ts in each app).
+  shipmentId   String?
+  awbCode      String?
+  courierName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model OrderItem {

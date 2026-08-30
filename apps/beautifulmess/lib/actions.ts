@@ -1,5 +1,6 @@
 "use server";
 
+import type { AddressValue } from "@storeforge/ui";
 import { getSessionCustomerId } from "./auth";
 import { placeOrderFor, type CheckoutLine } from "./checkout";
 
@@ -19,8 +20,9 @@ export type { CheckoutLine };
  */
 export async function placeOrder(
   lines: CheckoutLine[],
-  discountCode?: string
+  discountCode?: string,
+  address?: AddressValue
 ): Promise<{ gatewayOrderId: string; amount: number; isMocked: boolean }> {
   const customerId = await getSessionCustomerId();
-  return placeOrderFor(customerId, lines, discountCode);
+  return placeOrderFor(customerId, lines, discountCode, address);
 }

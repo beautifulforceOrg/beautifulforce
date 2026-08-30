@@ -3,7 +3,7 @@
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { CartSummary, formatPrice } from "@storeforge/ui";
+import { AddressForm, CartSummary, formatPrice, type AddressValue } from "@storeforge/ui";
 import { placeOrder } from "../../lib/actions";
 import { useCart } from "../../lib/cart-context";
 import { applyDiscountCode } from "../../lib/discount";
@@ -17,9 +17,27 @@ declare global {
   }
 }
 
+const EMPTY_ADDRESS: AddressValue = {
+  name: "",
+  email: "",
+  phone: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  pincode: "",
+};
+
+function isAddressComplete(address: AddressValue): boolean {
+  return Boolean(
+    address.name && address.email && address.phone && address.addressLine1 && address.city && address.state && address.pincode
+  );
+}
+
 export default function CheckoutPage() {
   const { lines, clear } = useCart();
   const router = useRouter();
+  const [address, setAddress] = useState<AddressValue>(EMPTY_ADDRESS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +71,8 @@ export default function CheckoutPage() {
           price: line.price,
           quantity: line.quantity,
         })),
-        appliedCode ?? undefined
+        appliedCode ?? undefined,
+        address
       )
         .then(({ gatewayOrderId, amount, isMocked }) => {
           // Under E2E_MOCK_EXTERNAL_APIS, gatewayOrderId is synthetic --
@@ -139,6 +158,14 @@ export default function CheckoutPage() {
         <span>{formatPrice(total)}</span>
       </div>
 
+      <div className="mt-8">
+        <AddressForm
+          value={address}
+          onChange={setAddress}
+          googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+        />
+      </div>
+
       {error ? (
         <p className="mt-4 text-sm" style={{ color: "#B91C1C" }}>
           {error}
@@ -147,7 +174,7 @@ export default function CheckoutPage() {
       <button
         type="button"
         onClick={handlePlaceOrder}
-        disabled={isSubmitting || lines.length === 0}
+        disabled={isSubmitting || lines.length === 0 || !isAddressComplete(address)}
         className="mt-6 rounded-[var(--sf-radius,0.5rem)] bg-brand px-6 py-3 text-sm font-medium uppercase text-brand-foreground disabled:opacity-50"
       >
         {isSubmitting ? "Placing order..." : "Pay now"}

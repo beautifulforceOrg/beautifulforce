@@ -1,5 +1,6 @@
 import { db } from "@storeforge/db";
 import { calculateCartTotal, createRazorpayOrderFromEnv } from "@storeforge/payments";
+import type { AddressValue } from "@storeforge/ui";
 import { applyDiscountCode } from "./discount";
 
 export interface CheckoutLine {
@@ -18,11 +19,18 @@ export interface CheckoutLine {
  *
  * customerId is nullable: both the web and mobile paths allow guest
  * checkout, same as before this was extracted.
+ *
+ * `address` is optional because the mobile app doesn't collect one yet
+ * (a known gap, not solved here -- see apps/beautifulmess-mobile). An
+ * order placed without one simply never gets a Shiprocket shipment
+ * created (see lib/shipping.ts's shipToAddressFrom), left for manual
+ * follow-up rather than blocking guest/mobile checkout entirely.
  */
 export async function placeOrderFor(
   customerId: string | null,
   lines: CheckoutLine[],
-  discountCode?: string
+  discountCode?: string,
+  address?: AddressValue
 ): Promise<{ gatewayOrderId: string; amount: number; isMocked: boolean }> {
   const subtotal = calculateCartTotal(lines.map((line) => ({ price: line.price, qty: line.quantity })));
   const discount = discountCode ? applyDiscountCode(discountCode, subtotal) : null;
@@ -37,6 +45,14 @@ export async function placeOrderFor(
       gatewayOrderId,
       status: "PENDING",
       customerId: customerId ?? undefined,
+      shipToName: address?.name,
+      shipToEmail: address?.email,
+      shipToPhone: address?.phone,
+      shipToAddressLine1: address?.addressLine1,
+      shipToAddressLine2: address?.addressLine2 || null,
+      shipToCity: address?.city,
+      shipToState: address?.state,
+      shipToPincode: address?.pincode,
       items: {
         create: lines.map((line) => ({
           productId: line.productId,

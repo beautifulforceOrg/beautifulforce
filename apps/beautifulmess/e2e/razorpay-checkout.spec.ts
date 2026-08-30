@@ -12,6 +12,17 @@ async function gotoWithRetry(page: Page, path: string) {
   }
 }
 
+async function fillCheckoutAddress(page: Page) {
+  await page.getByLabel("Full name").fill("Priya Nair");
+  await page.getByLabel("Email", { exact: true }).fill("priya@example.com");
+  await page.getByLabel("Phone number").fill("9999999999");
+  await page.getByLabel("Address", { exact: true }).fill("221 Residency Road");
+  await page.getByLabel("Flat, house number, floor, or landmark").fill("Flat 12");
+  await page.getByLabel("City").fill("Bengaluru");
+  await page.getByLabel("State").fill("Karnataka");
+  await page.getByLabel("Pincode").fill("560025");
+}
+
 // This exercises OUR integration code against a stubbed window.Razorpay --
 // not Razorpay's own hosted Checkout iframe, which isn't something a
 // headless test should try to drive. It still needs a real order to be
@@ -69,6 +80,7 @@ test("opens the real Razorpay Checkout widget with the correct order, and comple
   await page.getByRole("button", { name: "Add to cart" }).click();
 
   await gotoWithRetry(page, "/checkout");
+  await fillCheckoutAddress(page);
   await page.getByRole("button", { name: "Pay now" }).click();
 
   await page.waitForURL(/\/orders\/.+/);
@@ -105,6 +117,7 @@ test("a cancelled payment keeps the order pending and shows a retry message, not
   await page.getByRole("button", { name: "Add to cart" }).click();
 
   await gotoWithRetry(page, "/checkout");
+  await fillCheckoutAddress(page);
   await page.getByRole("button", { name: "Pay now" }).click();
 
   await expect(page.getByText(/Payment was cancelled/)).toBeVisible();

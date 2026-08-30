@@ -29,6 +29,15 @@ test("customer can browse a collection, view a product, select a variant, check 
   await page.getByRole("link", { name: "Checkout" }).click();
   await expect(page).toHaveURL(/\/checkout$/);
 
+  await page.getByLabel("Full name").fill("Asha Rao");
+  await page.getByLabel("Email").fill("asha@example.com");
+  await page.getByLabel("Phone number").fill("9999999999");
+  await page.getByLabel("Address", { exact: true }).fill("12 MG Road");
+  await page.getByLabel("Flat, house number, floor, or landmark").fill("Flat 4B");
+  await page.getByLabel("City").fill("Bengaluru");
+  await page.getByLabel("State").fill("Karnataka");
+  await page.getByLabel("Pincode").fill("560001");
+
   await page.getByRole("button", { name: "Pay now" }).click();
   await page.waitForURL(/\/orders\/.+/);
 
@@ -50,6 +59,9 @@ test("customer can browse a collection, view a product, select a variant, check 
 
   await page.reload();
   await expect(page.getByTestId("order-status")).toHaveText("Status: PAID");
+  // A shipment is created (mocked under E2E_MOCK_EXTERNAL_APIS) the moment
+  // payment is captured -- see lib/shipping.ts and the razorpay webhook.
+  await expect(page.getByTestId("order-tracking")).toContainText("AWB_E2E_MOCK");
 
   const deliveryResponse = await request.post(`${baseURL}/api/webhooks/shiprocket`, {
     headers: { "x-api-key": SHIPROCKET_TOKEN },
