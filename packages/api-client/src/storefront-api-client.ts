@@ -7,6 +7,7 @@ import type {
   OrderStatus,
   PlaceOrderResult,
   ProductSummary,
+  PushTokenRegistrationResult,
 } from "./types";
 
 export class StorefrontApiError extends Error {
@@ -30,6 +31,7 @@ export interface StorefrontApiClient {
   toggleWishlist(productId: string): Promise<{ wishlisted: boolean }>;
   placeOrder(lines: CheckoutLine[], discountCode?: string): Promise<PlaceOrderResult>;
   getOrderStatus(gatewayOrderId: string): Promise<OrderStatus>;
+  registerPushToken(token: string): Promise<PushTokenRegistrationResult>;
 }
 
 async function parseJsonBody(response: Response): Promise<unknown> {
@@ -123,6 +125,13 @@ export function createStorefrontApiClient(baseUrl: string, tokenStorage: TokenSt
     },
     getOrderStatus(gatewayOrderId) {
       return requestJson<OrderStatus>(`${origin}/api/mobile/orders/${gatewayOrderId}`);
+    },
+    async registerPushToken(token) {
+      return requestJson<PushTokenRegistrationResult>(`${origin}/api/mobile/push-token`, {
+        method: "POST",
+        headers: { ...JSON_HEADERS, ...(await authHeaders()) },
+        body: JSON.stringify({ token }),
+      });
     },
   };
 }

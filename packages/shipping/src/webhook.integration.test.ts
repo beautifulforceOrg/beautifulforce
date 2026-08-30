@@ -47,6 +47,33 @@ describe("Shiprocket webhook (real Postgres, no mocked Prisma client)", () => {
     expect(order?.status).toBe("PAID");
   });
 
+  it("fires the optional onStatusApplied callback with the mapped status when one applies", async () => {
+    await db.order.create({ data: { gatewayOrderId: "ship_test_order_1", status: "PAID" } });
+    const calls: unknown[] = [];
+
+    await POST(
+      mockRequest({ awb: "AWB1", current_status: "DELIVERED", order_id: "ship_test_order_1" }),
+      (payload, status) => {
+        calls.push({ payload, status });
+      }
+    );
+
+    expect(calls).toEqual([
+      { payload: { awb: "AWB1", current_status: "DELIVERED", order_id: "ship_test_order_1" }, status: "FULFILLED" },
+    ]);
+  });
+
+  it("does not fire onStatusApplied for a status with no clear mapping", async () => {
+    await db.order.create({ data: { gatewayOrderId: "ship_test_order_2", status: "PAID" } });
+    const calls: unknown[] = [];
+
+    await POST(mockRequest({ awb: "AWB2", current_status: "OUT FOR DELIVERY", order_id: "ship_test_order_2" }), () => {
+      calls.push(true);
+    });
+
+    expect(calls).toHaveLength(0);
+  });
+
   it("rejects a request without the correct webhook token", async () => {
     await db.order.create({ data: { gatewayOrderId: "ship_test_order_3", status: "PAID" } });
 

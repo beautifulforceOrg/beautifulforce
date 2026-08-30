@@ -88,6 +88,12 @@ model Customer {
   orders       Order[]
   wishlist     WishlistItem[]
   reviews      Review[]
+  // Set by a mobile app via POST /api/mobile/push-token after the
+  // customer logs in and grants notification permission. Nullable/single
+  // -- this reference app models one active device per customer, not a
+  // per-device token table (Expo re-issues the same token across app
+  // restarts on the same device, so re-registering just overwrites it).
+  expoPushToken String?
 }
 
 // A signed-in customer's saved products. Requires an account, unlike the

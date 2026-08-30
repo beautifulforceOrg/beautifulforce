@@ -17,7 +17,12 @@ const STATUS_MAP: Record<string, "FULFILLED" | "CANCELLED"> = {
   CANCELLED: "CANCELLED",
 };
 
-export async function applyCourierStatus(payload: ShiprocketWebhookPayload): Promise<void> {
+export type AppliedCourierStatus = "FULFILLED" | "CANCELLED";
+
+export async function applyCourierStatus(
+  payload: ShiprocketWebhookPayload,
+  onStatusApplied?: (payload: ShiprocketWebhookPayload, status: AppliedCourierStatus) => void | Promise<void>
+): Promise<void> {
   const mappedStatus = STATUS_MAP[payload.current_status.toUpperCase()];
   if (!mappedStatus) {
     return;
@@ -27,14 +32,25 @@ export async function applyCourierStatus(payload: ShiprocketWebhookPayload): Pro
     where: { gatewayOrderId: payload.order_id },
     data: { status: mappedStatus },
   });
+
+  await onStatusApplied?.(payload, mappedStatus);
 }
 
 /**
  * A Next.js Route Handler-compatible webhook endpoint. Configure the same
  * token as the "Webhook Secret" in the Shiprocket panel and pass it back as
  * SHIPROCKET_WEBHOOK_TOKEN -- see packages/shipping/README.md.
+ *
+ * `onStatusApplied` is an optional hook fired only when a status actually
+ * changed -- apps/beautifulmess uses it to send a mobile push notification
+ * (see lib/push-notifications.ts); this package doesn't know or care about
+ * push at all, so any other storefront app can ignore the parameter with
+ * no behavior change.
  */
-export async function POST(request: Request): Promise<Response> {
+export async function POST(
+  request: Request,
+  onStatusApplied?: (payload: ShiprocketWebhookPayload, status: AppliedCourierStatus) => void | Promise<void>
+): Promise<Response> {
   const expectedToken = process.env.SHIPROCKET_WEBHOOK_TOKEN;
   if (!expectedToken) {
     throw new Error("SHIPROCKET_WEBHOOK_TOKEN must be set");
@@ -46,7 +62,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const payload = (await request.json()) as ShiprocketWebhookPayload;
-  await applyCourierStatus(payload);
+  await applyCourierStatus(payload, onStatusApplied);
 
   return new Response("OK", { status: 200 });
 }

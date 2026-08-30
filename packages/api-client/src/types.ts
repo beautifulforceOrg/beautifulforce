@@ -49,3 +49,7 @@ export interface OrderStatus {
   status: string;
 }
 
+export interface PushTokenRegistrationResult {
+  ok: boolean;
+}
+

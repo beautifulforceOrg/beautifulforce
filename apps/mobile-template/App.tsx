@@ -2,11 +2,24 @@ import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
+import * as Notifications from "expo-notifications";
 import { Button, ProductGrid, ThemeProvider, formatPrice, type StorefrontTheme } from "@storeforge/ui-native";
 import { createStorefrontApiClient, type ProductSummary } from "@storeforge/api-client";
 import { getApiBaseUrl } from "./lib/api-base-url";
 import { createSecureTokenStorage } from "./lib/secure-token-storage";
 import { CartProvider, useCart } from "./lib/cart-context";
+import { registerForPushNotificationsAsync } from "./lib/register-for-push-notifications";
+
+// Foreground notifications still show a banner/sound in test mode, same
+// as a backgrounded app would get from the OS.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 // Two placeholder StorefrontTheme objects -- standing in for what a real
 // client config (e.g. Beautiful Mess's) will supply. Swapping which one is
@@ -78,7 +91,9 @@ function StorefrontDemo() {
     let cancelled = false;
 
     apiClient.isLoggedIn().then((loggedIn) => {
-      if (!cancelled) setIsLoggedIn(loggedIn);
+      if (cancelled) return;
+      setIsLoggedIn(loggedIn);
+      if (loggedIn) void registerPushTokenIfPossible();
     });
 
     apiClient
@@ -98,12 +113,34 @@ function StorefrontDemo() {
     };
   }, []);
 
+  useEffect(() => {
+    // Order-status pushes are received while this listener is mounted,
+    // regardless of which screen the user is on -- shown here as a
+    // banner-style message, the same authMessage slot the wishlist/login
+    // actions use.
+    const subscription = Notifications.addNotificationReceivedListener((notification) => {
+      setAuthMessage(notification.request.content.body ?? "New notification");
+    });
+    return () => subscription.remove();
+  }, []);
+
+  async function registerPushTokenIfPossible() {
+    try {
+      const token = await registerForPushNotificationsAsync();
+      if (token) await apiClient.registerPushToken(token);
+    } catch {
+      // Best-effort -- a denied permission or simulator with no push
+      // capability shouldn't block the rest of the app.
+    }
+  }
+
   async function handleLogIn() {
     setAuthMessage(null);
     try {
       await apiClient.logIn(email, password);
       setIsLoggedIn(true);
       setAuthMessage("Logged in.");
+      await registerPushTokenIfPossible();
     } catch {
       setAuthMessage("Login failed.");
     }

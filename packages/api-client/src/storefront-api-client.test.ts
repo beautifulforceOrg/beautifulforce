@@ -196,4 +196,22 @@ describe("createStorefrontApiClient", () => {
       expect(result).toEqual({ gatewayOrderId: "order_1", status: "PAID" });
     });
   });
+
+  describe("push notifications", () => {
+    it("registerPushToken posts the token with the Bearer header", async () => {
+      const fetchMock = mockFetchOnce({ ok: true });
+      const tokenStorage = createInMemoryTokenStorage();
+      await tokenStorage.setToken("signed.token.value");
+      const client = createStorefrontApiClient("http://localhost:3000", tokenStorage);
+
+      const result = await client.registerPushToken("ExponentPushToken[abc123]");
+
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/api/mobile/push-token", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: "Bearer signed.token.value" },
+        body: JSON.stringify({ token: "ExponentPushToken[abc123]" }),
+      });
+      expect(result).toEqual({ ok: true });
+    });
+  });
 });

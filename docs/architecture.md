@@ -48,6 +48,10 @@ graph LR
   Config -.shared config.-> App
 ```
 
+A mobile client (`apps/mobile-template`, forking to `apps/<client>-mobile`
+per storefront) talks to the same storefront app over a JSON API instead
+of rendering its pages -- see diagram 10 for that architecture in detail.
+
 ## 2. Package dependency graph
 
 Who imports whom (build-time, not runtime). `packages/config` sits under
@@ -59,13 +63,18 @@ graph BT
   config["packages/config"]
   db["packages/db"]
   ui["packages/ui"]
+  uinative["packages/ui-native"]
+  apiclient["packages/api-client"]
   payments["packages/payments"]
   shipping["packages/shipping"]
   template["apps/_template"]
   beautifulmess["apps/beautifulmess"]
+  mobiletemplate["apps/mobile-template"]
 
   db --> config
   ui --> config
+  uinative --> config
+  apiclient --> config
   payments --> config
   payments --> db
   shipping --> config
@@ -80,7 +89,14 @@ graph BT
   beautifulmess --> ui
   beautifulmess --> payments
   beautifulmess --> shipping
+  mobiletemplate --> config
+  mobiletemplate --> uinative
+  mobiletemplate --> apiclient
 ```
+
+`packages/api-client` has no build-time dependency on `apps/beautifulmess`
+(or any storefront app) -- it talks to `app/api/mobile/**` purely over
+HTTP, at a base URL supplied at runtime. See diagram 10.
 
 ## 3. Purchase flow (generic, any storefront app)
 
@@ -181,6 +197,11 @@ also gained a nullable `stockQty` (null = untracked/unlimited, 0 = sold
 out) so a storefront can optionally import real inventory data. See
 `packages/db/README.md`.
 
+`Customer.expoPushToken` (nullable) was added for the mobile app's push
+notifications (diagram 11) -- one token per customer, set by a mobile app
+via `POST /api/mobile/push-token` after login. Not a separate table: this
+reference app models one active device per customer, not a device list.
+
 ## 5. `packages/ui` theming flow
 
 ```mermaid
@@ -222,7 +243,16 @@ graph LR
   Map -->|DELIVERED| Fulfilled["Order.status = FULFILLED"]
   Map -->|CANCELED / CANCELLED| Cancelled["Order.status = CANCELLED"]
   Map -->|anything else, e.g. IN TRANSIT| NoOp["Acknowledged 200, no DB write"]
+  Fulfilled --> Hook{"onStatusApplied?\n(optional)"}
+  Cancelled --> Hook
+  Hook -->|apps/beautifulmess| Push["sendOrderStatusPushNotification()\n(diagram 11)"]
 ```
+
+`applyCourierStatus`/`POST` take an optional `onStatusApplied` callback,
+fired only when a status actually changed -- `packages/shipping` itself
+knows nothing about push notifications; `apps/beautifulmess`'s own
+`app/api/webhooks/shiprocket/route.ts` supplies the callback. Any other
+storefront app can ignore the parameter with no behavior change.
 
 ## 8. `apps/beautifulmess` catalog import pipeline
 
@@ -251,3 +281,92 @@ graph TD
 Scoped to the PR's changed packages via
 `--filter=...[origin/<base-branch>]` on `pull_request`; runs unfiltered on
 a direct push to `main`. See `.github/workflows/ci.yml`.
+
+## 10. Mobile app architecture
+
+```mermaid
+graph LR
+  MobileCustomer((Mobile customer))
+
+  subgraph MobileApp["apps/mobile-template (Expo / React Native)"]
+    Screens["App.tsx screens\ncatalog / cart / checkout / order"]
+    CartCtx["CartProvider\n(AsyncStorage)"]
+    TokenStore["SecureStore\n(session token)"]
+  end
+
+  subgraph MobileShared["packages/*"]
+    UINative["ui-native\n(ThemeProvider, Button,\nProductCard, ProductGrid)"]
+    ApiClient["api-client\n(createStorefrontApiClient)"]
+  end
+
+  subgraph BFF["apps/beautifulmess -- app/api/mobile/**"]
+    MobileRoutes["Route Handlers:\nproducts, collections,\nauth, wishlist, orders,\npush-token"]
+  end
+
+  DB[("Postgres")]
+  Expo[["Expo Push Service"]]
+
+  MobileCustomer --> Screens
+  Screens --> UINative
+  Screens --> CartCtx
+  Screens --> ApiClient
+  ApiClient --> TokenStore
+  ApiClient -->|HTTPS, Bearer token| MobileRoutes
+  MobileRoutes --> DB
+  MobileRoutes -.push token.-> Expo
+```
+
+`app/api/mobile/**` reuses the exact same pure business logic the web
+Server Components/Actions call (`lib/catalog.ts`, `lib/checkout.ts`,
+`lib/wishlist.ts`, ...) -- each mobile route is a thin JSON wrapper, never
+a second implementation. Auth travels as a `Authorization: Bearer` header
+instead of a cookie, verified by the same `verifySessionToken()` the web
+cookie path uses (`lib/auth.ts`'s `getCustomerIdFromAuthHeader`).
+
+## 11. Mobile checkout + push notification flow
+
+```mermaid
+sequenceDiagram
+  participant C as Mobile customer
+  participant App as apps/mobile-template
+  participant API as apps/beautifulmess\n(app/api/mobile/**)
+  participant DB as Postgres
+  participant RP as Razorpay
+  participant SR as Shiprocket
+  participant Expo as Expo Push Service
+
+  C->>App: Browse -> add to cart (AsyncStorage)
+  C->>App: Checkout
+  App->>API: POST /api/mobile/orders {lines, discountCode}
+  API->>RP: create order (skipped for a synthetic id under E2E_MOCK_EXTERNAL_APIS)
+  API->>DB: Order.create(status=PENDING)
+  API-->>App: {gatewayOrderId, amount, isMocked}
+
+  alt isMocked (dev/test default)
+    App->>App: skip straight to order screen
+  else real test-mode credentials
+    App->>App: WebBrowser.openBrowserAsync(mobile-pay page)
+    App->>API: GET /checkout/mobile-pay/:gatewayOrderId
+    API-->>App: page auto-opens Razorpay Checkout.js
+    C->>RP: completes test-mode payment
+    App->>App: shopper returns to the app
+  end
+
+  RP->>API: webhook: payment.captured
+  API->>DB: Order.update(status=PAID) -- idempotent
+
+  App->>API: poll GET /api/mobile/orders/:gatewayOrderId (every 3s)
+  API-->>App: {status}
+
+  SR->>API: webhook: courier status update
+  API->>DB: Order.update(status=FULFILLED/CANCELLED)
+  API->>Expo: POST push (customer's stored expoPushToken)
+  Expo-->>C: push notification delivered
+```
+
+The Razorpay/Shiprocket webhooks are the same handlers the web purchase
+flow (diagram 3) uses, completely unaware mobile exists -- mobile just
+polls the same `Order` row the web `/orders/:gatewayOrderId` page reads.
+Push delivery only happens if the customer is logged in and granted
+notification permission (`POST /api/mobile/push-token`); it's silently
+skipped otherwise (diagram 7).

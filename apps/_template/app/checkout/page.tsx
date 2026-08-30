@@ -9,21 +9,23 @@ import { useCart } from "../../lib/cart-context";
 export default function CheckoutPage() {
   const { lines, clear } = useCart();
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   function handlePlaceOrder() {
     setError(null);
-    startTransition(async () => {
-      try {
-        const { gatewayOrderId } = await placeOrder(
-          lines.map((line) => ({ productId: line.productId, price: line.price, quantity: line.quantity }))
-        );
-        clear();
-        router.push(`/orders/${gatewayOrderId}`);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-      }
+    setIsSubmitting(true);
+    startTransition(() => {
+      placeOrder(lines.map((line) => ({ productId: line.productId, price: line.price, quantity: line.quantity })))
+        .then(({ gatewayOrderId }) => {
+          clear();
+          router.push(`/orders/${gatewayOrderId}`);
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+        })
+        .finally(() => setIsSubmitting(false));
     });
   }
 
@@ -39,10 +41,10 @@ export default function CheckoutPage() {
       <button
         type="button"
         onClick={handlePlaceOrder}
-        disabled={isPending || lines.length === 0}
+        disabled={isSubmitting || lines.length === 0}
         className="mt-6 rounded-[var(--sf-radius,0.5rem)] bg-brand px-4 py-2 text-brand-foreground disabled:opacity-50"
       >
-        {isPending ? "Placing order..." : "Pay now"}
+        {isSubmitting ? "Placing order..." : "Pay now"}
       </button>
     </main>
   );

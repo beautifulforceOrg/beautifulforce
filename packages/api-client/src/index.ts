@@ -7,5 +7,6 @@ export type {
   CheckoutLine,
   PlaceOrderResult,
   OrderStatus,
+  PushTokenRegistrationResult,
 } from "./types";
 export { createInMemoryTokenStorage, type TokenStorage } from "./token-storage";
