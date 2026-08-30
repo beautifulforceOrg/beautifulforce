@@ -15,7 +15,8 @@
     "seed:catalog": "dotenv -e .env.test -- tsx scripts/seed-catalog.ts",
     "test": "dotenv -e .env.test -- vitest run",
     "pretest:e2e": "pnpm run db:push && pnpm run seed:catalog",
-    "test:e2e": "dotenv -e .env.test -- playwright test"
+    "test:e2e": "dotenv -e .env.test.local -e .env.test -- playwright test",
+    "test:e2e:shiprocket-real": "E2E_MOCK_EXTERNAL_APIS=0 dotenv -e .env.test.local -e .env.test -- playwright test e2e/shiprocket-real.spec.ts"
   },
   "dependencies": {
     "@storeforge/db": "workspace:*",

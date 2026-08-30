@@ -90,6 +90,11 @@ describe("createShiprocketProvider", () => {
     expect(capturedBody).toMatchObject({
       pickup_location: "Test Warehouse",
       payment_method: "Prepaid",
+      billing_customer_name: "Shopper",
+      // Required by Shiprocket's real API even when empty -- confirmed
+      // against a live account, which 422s with "validation.present" if
+      // this key is missing entirely (not just empty/falsy).
+      billing_last_name: "",
       billing_email: "shopper@example.com",
       billing_address_2: "Flat 4B",
       billing_country: "India",
@@ -100,6 +105,27 @@ describe("createShiprocketProvider", () => {
       height: 3,
       weight: 0.15,
     });
+  });
+
+  it("splits a multi-word name into first and last name for Shiprocket", async () => {
+    let capturedBody: Record<string, unknown> | undefined;
+    server.use(
+      http.post("https://apiv2.shiprocket.in/v1/external/orders/create/adhoc", async ({ request }) => {
+        capturedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ shipment_id: 998877, status: "NEW" });
+      })
+    );
+
+    await provider.createShipment({
+      orderId: "order_4",
+      orderDate: "2026-01-01",
+      shipTo: { ...SHIP_TO, name: "Priya Nair" },
+      items: [],
+      packageWeightKg: 0.15,
+      dimensionsCm: { length: 12, breadth: 10, height: 3 },
+    });
+
+    expect(capturedBody).toMatchObject({ billing_customer_name: "Priya", billing_last_name: "Nair" });
   });
 
   it("tracks a shipment by AWB code", async () => {

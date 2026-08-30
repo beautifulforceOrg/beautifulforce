@@ -60,6 +60,13 @@ export function createShiprocketProvider(credentials: ShiprocketCredentials): Sh
     async createShipment(input: CreateShipmentInput): Promise<Shipment> {
       const token = await getAuthToken(credentials);
       const subTotal = input.items.reduce((sum, item) => sum + (item.sellingPrice / 100) * item.units, 0);
+      // Shiprocket requires billing_last_name to be present (even empty) --
+      // confirmed against the real API, which otherwise 422s with
+      // "validation.present" and no mention of this in what the request
+      // itself returns for other missing fields. ShipToAddress only has
+      // one `name` field, so split it heuristically.
+      const [billingFirstName, ...billingLastNameParts] = input.shipTo.name.trim().split(/\s+/);
+      const billingLastName = billingLastNameParts.join(" ");
 
       const raw = (await shiprocketFetch("/orders/create/adhoc", token, {
         method: "POST",
@@ -71,7 +78,8 @@ export function createShiprocketProvider(credentials: ShiprocketCredentials): Sh
           // a shipment is ever created -- see each app's
           // app/api/webhooks/razorpay/route.ts.
           payment_method: "Prepaid",
-          billing_customer_name: input.shipTo.name,
+          billing_customer_name: billingFirstName,
+          billing_last_name: billingLastName,
           billing_email: input.shipTo.email,
           billing_phone: input.shipTo.phone,
           billing_address: input.shipTo.addressLine1,
