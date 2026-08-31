@@ -133,6 +133,9 @@ importers:
       imagekit:
         specifier: ^6.0.0
         version: 6.0.0
+      imagekit-javascript:
+        specifier: ^4.0.1
+        version: 4.0.1
       postcss:
         specifier: ^8.4.49
         version: 8.5.26
@@ -4829,6 +4832,10 @@ packages:
     resolution: {integrity: sha512-rH+46sQJ2dlwfjfhCyNx5thzrv+dtmBIhPHk0zgRUukHzZ/kRueTJXoYYsclBaKcSMBWuGbOFXtioLpzTb5euw==}
     engines: {node: '>=16.x'}
     hasBin: true
+
+  imagekit-javascript@4.0.1:
+    resolution: {integrity: sha512-V3eVMz7OW8w8dSNJXPtVcWQMdV0P1wRs+Bftb2B1bKRl8NjOf+NGRWYb/meJlrmSL/HxT68PjM92/XFB+9ZfJA==}
+    deprecated: Please use @imagekit/javascript
 
   imagekit@6.0.0:
     resolution: {integrity: sha512-0MsxThZM2PYH6ngwN3zi9PDa8pCB5mEZG2FSySYiZk3Hfri8IMwUqVNzRlLQewBHQ3YtTN9M59O0Xe9HRewtOA==}
@@ -12800,6 +12807,8 @@ snapshots:
   image-size@1.2.1:
     dependencies:
       queue: 6.0.2
+
+  imagekit-javascript@4.0.1: {}
 
   imagekit@6.0.0:
     dependencies:

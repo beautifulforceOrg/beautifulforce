@@ -187,6 +187,14 @@ erDiagram
     string email
     string comment
   }
+  AdminUser ||--o{ Ticket : files
+  AdminUser ||--o{ TicketComment : writes
+  Ticket ||--o{ TicketComment : has
+  DiscountCode {
+    string code
+    int percentOff
+    boolean active
+  }
 ```
 
 `NewsletterSubscriber` and `ContactMessage` are intentionally standalone
@@ -230,6 +238,32 @@ Autocomplete) and stores it directly on `Order` rather than a separate
 `Address` model, since nothing reuses a saved address across orders yet.
 See `packages/shipping/README.md`.
 
+`AdminUser`, `DiscountCode`, `Ticket`/`TicketComment` were added for
+`apps/beautifulmess`'s merchant admin dashboard -- `AdminUser` is kept
+entirely separate from `Customer` (admins are never shoppers and must
+never be reachable through a shopper-facing query); `DiscountCode`
+replaces what was a hardcoded single-entry map in `lib/discount.ts`;
+`Ticket`/`TicketComment` are a lightweight support-request queue so a
+non-technical store owner can file bug/feature/change requests from
+inside the dashboard instead of over chat -- both admins are peers here,
+no separate "developer" role. `ContactMessage` gained `handledAt`
+(nullable, null = unhandled) for the admin inbox view. `Order` gained
+`amountPaid`/`discountAmount` (both nullable, paise) so admin revenue
+analytics reflect what was actually charged rather than re-deriving from
+current (possibly since-changed) list prices. `Product` gained a large
+set of marketplace-ready inventory attributes (SKU, barcode, brand,
+physical + package weight/dimensions, MRP, HSN/GST/country-of-origin
+compliance fields, material/care/tags merchandising fields,
+`isPublished`, `lowStockThreshold`) -- `packageWeightGrams`/
+`packageLengthCm`/etc. also fixed a real bug: Shiprocket shipment
+creation previously used one flat hardcoded weight/size for every order
+regardless of contents; `lib/shipping.ts`'s `aggregatePackageForItems`
+now sums real per-product data across an order's line items instead. All
+of these are `apps/beautifulmess`-driven schema additions but land in the
+shared file per this repo's model -- the admin dashboard's routes/logic
+themselves stay app-local (`apps/beautifulmess/app/admin/**`,
+`lib/admin/**`), not promoted to `packages/*`.
+
 ## 5. `packages/ui` theming flow
 
 ```mermaid
@@ -237,7 +271,7 @@ graph LR
   Theme["StorefrontTheme object\n(colors, fonts, radius, logo)"] --> Provider[ThemeProvider]
   Provider -->|sets CSS variables| Wrapper["Wrapping &lt;div&gt; style"]
   Wrapper --> Tailwind["Tailwind tokens\nbg-brand, font-heading, ..."]
-  Tailwind --> Components["Button, ProductGrid, CartSummary,\nCheckoutSteps, VariantPicker, AddressForm"]
+  Tailwind --> Components["Button, ProductGrid, CartSummary,\nCheckoutSteps, VariantPicker, AddressForm,\nDataTable, Dialog, ToastProvider"]
 ```
 
 No component reads a color/font literal directly -- swapping the theme

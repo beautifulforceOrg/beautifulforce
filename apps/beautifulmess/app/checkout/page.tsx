@@ -6,7 +6,8 @@ import { useState, useTransition } from "react";
 import { AddressForm, CartSummary, formatPrice, type AddressValue } from "@storeforge/ui";
 import { placeOrder } from "../../lib/actions";
 import { useCart } from "../../lib/cart-context";
-import { applyDiscountCode } from "../../lib/discount";
+import { previewDiscountCode } from "../../lib/discount-actions";
+import type { DiscountResult } from "../../lib/discount";
 import { buildRazorpayCheckoutOptions } from "../../lib/razorpay-checkout";
 
 // Razorpay's Checkout.js attaches this global -- there's no official
@@ -42,22 +43,22 @@ export default function CheckoutPage() {
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [discountInput, setDiscountInput] = useState("");
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [discount, setDiscount] = useState<DiscountResult | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
 
   const subtotal = lines.reduce((total, line) => total + line.price * line.quantity, 0);
-  const discount = appliedCode ? applyDiscountCode(appliedCode, subtotal) : null;
   const total = discount?.valid ? subtotal - discount.amountOff : subtotal;
 
   function handleApplyDiscount() {
-    const result = applyDiscountCode(discountInput, subtotal);
-    if (!result.valid) {
-      setDiscountError("That discount code isn't valid.");
-      setAppliedCode(null);
-      return;
-    }
-    setDiscountError(null);
-    setAppliedCode(result.code);
+    previewDiscountCode(discountInput, subtotal).then((result) => {
+      if (!result.valid) {
+        setDiscountError("That discount code isn't valid.");
+        setDiscount(null);
+        return;
+      }
+      setDiscountError(null);
+      setDiscount(result);
+    });
   }
 
   function handlePlaceOrder() {
@@ -71,7 +72,7 @@ export default function CheckoutPage() {
           price: line.price,
           quantity: line.quantity,
         })),
-        appliedCode ?? undefined,
+        discount?.valid ? discount.code : undefined,
         address
       )
         .then(({ gatewayOrderId, amount, isMocked }) => {

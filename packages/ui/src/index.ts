@@ -4,6 +4,9 @@ export { CartItem, CartSummary, type CartLine } from "./components/cart-summary"
 export { CheckoutSteps } from "./components/checkout-steps";
 export { VariantPicker, type VariantOption } from "./components/variant-picker";
 export { AddressForm, type AddressValue, type AddressFormProps } from "./components/address-form";
+export { DataTable, type DataTableColumn, type DataTableProps } from "./components/data-table";
+export { Dialog, type DialogProps } from "./components/dialog";
+export { ToastProvider, useToast } from "./components/toast";
 export { ThemeProvider, themeToCssVariables, type StorefrontTheme } from "./theme/theme-provider";
 export { formatPrice } from "./lib/format-price";
 export { cn } from "./lib/cn";

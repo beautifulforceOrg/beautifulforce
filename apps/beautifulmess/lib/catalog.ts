@@ -17,6 +17,7 @@ export async function getCollectionBySlug(slug: string) {
     where: { slug },
     include: {
       products: {
+        where: { isPublished: true },
         include: {
           // take: 2, not 1 -- the catalog grid's hover-swap shows a
           // product's second real image, not a fabricated placeholder.
@@ -37,7 +38,7 @@ export async function searchProducts(query: string) {
   const trimmed = query.trim();
   if (!trimmed) return [];
   return db.product.findMany({
-    where: { name: { contains: trimmed, mode: "insensitive" } },
+    where: { isPublished: true, name: { contains: trimmed, mode: "insensitive" } },
     include: { images: { orderBy: { position: "asc" }, take: 2 }, variants: { select: { stockQty: true } } },
     take: 24,
   });
@@ -45,6 +46,7 @@ export async function searchProducts(query: string) {
 
 export async function getFeaturedProducts(limit = 8) {
   return db.product.findMany({
+    where: { isPublished: true },
     take: limit,
     orderBy: { createdAt: "asc" },
     include: {
@@ -56,7 +58,7 @@ export async function getFeaturedProducts(limit = 8) {
 
 export async function getProductBySlug(slug: string) {
   return db.product.findUnique({
-    where: { slug },
+    where: { slug, isPublished: true },
     include: {
       images: { orderBy: { position: "asc" } },
       variants: true,
@@ -78,6 +80,7 @@ export async function getYouMayAlsoLike(productId: string, collectionIds: string
   if (collectionIds.length === 0) return [];
   return db.product.findMany({
     where: {
+      isPublished: true,
       id: { not: productId },
       collections: { some: { id: { in: collectionIds } } },
     },
@@ -92,8 +95,8 @@ export async function getYouMayAlsoLike(productId: string, collectionIds: string
 export async function getCompleteTheLook(productId: string, collectionIds: string[]) {
   const where =
     collectionIds.length > 0
-      ? { id: { not: productId }, collections: { none: { id: { in: collectionIds } } } }
-      : { id: { not: productId } };
+      ? { isPublished: true, id: { not: productId }, collections: { none: { id: { in: collectionIds } } } }
+      : { isPublished: true, id: { not: productId } };
 
   return db.product.findFirst({
     where,

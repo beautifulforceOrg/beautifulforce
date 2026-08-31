@@ -15,8 +15,12 @@ function sign(value: string): string {
   return createHmac("sha256", sessionSecret()).update(value).digest("hex");
 }
 
-export function createSessionToken(customerId: string, now = Date.now()): string {
-  const expires = now + SESSION_MAX_AGE_SECONDS * 1000;
+export function createSessionToken(
+  customerId: string,
+  now = Date.now(),
+  maxAgeSeconds = SESSION_MAX_AGE_SECONDS
+): string {
+  const expires = now + maxAgeSeconds * 1000;
   const payload = `${customerId}.${expires}`;
   return `${payload}.${sign(payload)}`;
 }

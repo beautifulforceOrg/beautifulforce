@@ -8,7 +8,7 @@
 // copy, never merged back.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // "native" covers local dev (macOS/Linux) and Vercel's build machine;
   // "rhel-openssl-3.0.x" is what Vercel's serverless Lambda runtime
   // actually reports at request time, which differs from the build
@@ -23,19 +23,67 @@ datasource db {
 }
 
 model Product {
-  id          String      @id @default(cuid())
-  slug        String      @unique
-  name        String
-  description String? // raw HTML, as most storefront-builder exports (e.g. Shopify's) provide it
-  price       Int // smallest currency unit (paise), matches packages/payments pricing helpers
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItems  OrderItem[]
-  variants    ProductVariant[]
-  images      ProductImage[]
-  collections Collection[] @relation("CollectionToProduct")
+  id           String           @id @default(cuid())
+  slug         String           @unique
+  name         String
+  description  String? // raw HTML, as most storefront-builder exports (e.g. Shopify's) provide it
+  price        Int // smallest currency unit (paise), matches packages/payments pricing helpers
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  orderItems   OrderItem[]
+  variants     ProductVariant[]
+  images       ProductImage[]
+  collections  Collection[]     @relation("CollectionToProduct")
   wishlistedBy WishlistItem[]
-  reviews     Review[]
+  reviews      Review[]
+
+  // Identifiers -- today only ProductVariant has a sku, so a single-
+  // variant/no-variant product has no SKU at all.
+  sku     String? @unique
+  barcode String? // UPC/EAN/GTIN
+  brand   String?
+
+  // Physical attributes of the product itself.
+  weightGrams Int?
+  lengthCm    Float?
+  widthCm     Float?
+  heightCm    Float?
+
+  // Shipping/package attributes -- used by lib/shipping.ts's
+  // createShipmentForOrder instead of a flat per-app guess, so Shiprocket
+  // gets a real weight/size for what's actually being shipped.
+  packageWeightGrams Int?
+  packageLengthCm    Float?
+  packageWidthCm     Float?
+  packageHeightCm    Float?
+
+  // Pricing depth: `price` stays the real selling price; `mrp` is the
+  // strike-through list price shown alongside it (and what marketplaces
+  // like Amazon/Flipkart expect as a separate field).
+  mrp Int?
+
+  // Compliance -- required to sell online in India under Legal Metrology
+  // rules, and required by every marketplace's own listing flow.
+  hsnCode             String?
+  gstRatePercent      Int?
+  countryOfOrigin     String? @default("India")
+  // Name + address of manufacturer/packer/importer, kept as one free-text
+  // block -- a small single-location business has one, not a table's
+  // worth of variation.
+  manufacturerDetails String?
+
+  // Merchandising / discovery.
+  material         String?
+  careInstructions String?
+  // Comma-separated search keywords -- simplest shape without a join
+  // table; revisit only if faceted search needs real multi-value filters.
+  tags             String?
+
+  // Lifecycle: hide from the storefront without deleting the row.
+  isPublished       Boolean @default(true)
+  // Dashboard flags "running low" once total stockQty across variants
+  // drops to or below this.
+  lowStockThreshold Int?
 }
 
 // A product's purchasable options (size, denomination, ...). Not every
@@ -47,7 +95,7 @@ model ProductVariant {
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   name       String // the option name, e.g. "Size" or "Denomination"
   value      String // the option value, e.g. "5-6 years" or "₹5000"
-  sku        String?
+  sku        String?     @unique
   price      Int? // overrides Product.price when set (a variant-specific price)
   // Null means untracked/unlimited (the default for a storefront that
   // never imports inventory data). 0 means sold out.
@@ -77,17 +125,17 @@ model Collection {
 }
 
 model Customer {
-  id           String         @id @default(cuid())
-  email        String         @unique
-  name         String?
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
   // Null for a customer created only as an order's contact (guest
   // checkout, or created by a webhook) -- account features (login,
   // wishlist) all require this to be set.
-  passwordHash String?
-  createdAt    DateTime       @default(now())
-  orders       Order[]
-  wishlist     WishlistItem[]
-  reviews      Review[]
+  passwordHash  String?
+  createdAt     DateTime       @default(now())
+  orders        Order[]
+  wishlist      WishlistItem[]
+  reviews       Review[]
   // Set by a mobile app via POST /api/mobile/push-token after the
   // customer logs in and grants notification permission. Nullable/single
   // -- this reference app models one active device per customer, not a
@@ -141,12 +189,14 @@ model NewsletterSubscriber {
 // real transactional email provider to actually notify the merchant --
 // see apps/beautifulmess/lib/contact-actions.ts.
 model ContactMessage {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   email     String
   phone     String?
   comment   String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  // Null = unhandled. Set by an admin marking it read/actioned.
+  handledAt DateTime?
 }
 
 enum OrderStatus {
@@ -157,12 +207,12 @@ enum OrderStatus {
 }
 
 model Order {
-  id             String      @id @default(cuid())
-  customerId     String?
-  customer       Customer?   @relation(fields: [customerId], references: [id])
-  gatewayOrderId String?     @unique // Razorpay order id -- the webhook idempotency key
-  status         OrderStatus @default(PENDING)
-  items          OrderItem[]
+  id                 String      @id @default(cuid())
+  customerId         String?
+  customer           Customer?   @relation(fields: [customerId], references: [id])
+  gatewayOrderId     String?     @unique // Razorpay order id -- the webhook idempotency key
+  status             OrderStatus @default(PENDING)
+  items              OrderItem[]
   // Collected at checkout and handed to packages/shipping's
   // createShipment() once payment is captured -- Shiprocket's API expects
   // a finished address per order, it doesn't collect one itself. Nullable
@@ -183,11 +233,18 @@ model Order {
   // Set once createShipment() succeeds -- also doubles as the idempotency
   // guard against creating a second shipment on a redelivered payment
   // webhook (see app/api/webhooks/razorpay/route.ts in each app).
-  shipmentId   String?
-  awbCode      String?
-  courierName  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  shipmentId         String?
+  awbCode            String?
+  courierName        String?
+  // Set at order creation by placeOrderFor -- the actual amount charged
+  // and any discount applied, in paise. Nullable since pre-existing
+  // orders predate these columns. Used by admin revenue analytics
+  // instead of re-deriving from current (possibly since-changed) list
+  // prices.
+  amountPaid         Int?
+  discountAmount     Int?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 }
 
 model OrderItem {
@@ -199,4 +256,75 @@ model OrderItem {
   variantId String?
   variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
   quantity  Int
+}
+
+// A merchant/staff login, kept entirely separate from Customer -- admins
+// are never shoppers and must never be reachable through a shopper-facing
+// query (e.g. db.customer.findMany() on a marketing page). Who is allowed
+// to actually log in is still gated by an ADMIN_ALLOWED_EMAILS allowlist
+// checked at login time, independent of whether a row exists here.
+model AdminUser {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  passwordHash   String
+  // A minimal login-lockout guard -- there is no rate-limiting anywhere
+  // else in this codebase, and a small, fixed set of admin accounts is a
+  // guessable-password-attempt surface without one.
+  failedAttempts Int             @default(0)
+  lockedUntil    DateTime?
+  createdAt      DateTime        @default(now())
+  tickets        Ticket[]
+  ticketComments TicketComment[]
+}
+
+// Replaces the hardcoded single-entry map that used to live in
+// apps/beautifulmess/lib/discount.ts.
+model DiscountCode {
+  id         String   @id @default(cuid())
+  code       String   @unique // stored uppercase-normalized
+  percentOff Int // whole percent, 1-100
+  active     Boolean  @default(true) // soft-deactivate rather than delete
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum TicketCategory {
+  BUG
+  FEATURE
+  CHANGE
+  OTHER
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+// A lightweight support/request queue so a non-technical store owner can
+// file bug/feature/change requests from inside the admin dashboard
+// instead of over chat. Both admins are peers here -- no separate
+// "developer" role; either can file, comment, or change status.
+model Ticket {
+  id          String          @id @default(cuid())
+  subject     String
+  description String
+  category    TicketCategory  @default(OTHER)
+  status      TicketStatus    @default(OPEN)
+  createdById String
+  createdBy   AdminUser       @relation(fields: [createdById], references: [id])
+  comments    TicketComment[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model TicketComment {
+  id        String    @id @default(cuid())
+  ticketId  String
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    AdminUser @relation(fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime  @default(now())
 }

@@ -33,7 +33,7 @@ export async function placeOrderFor(
   address?: AddressValue
 ): Promise<{ gatewayOrderId: string; amount: number; isMocked: boolean }> {
   const subtotal = calculateCartTotal(lines.map((line) => ({ price: line.price, qty: line.quantity })));
-  const discount = discountCode ? applyDiscountCode(discountCode, subtotal) : null;
+  const discount = discountCode ? await applyDiscountCode(discountCode, subtotal) : null;
   const amount = discount?.valid ? subtotal - discount.amountOff : subtotal;
   const receipt = `receipt_${Date.now()}`;
   const isMocked = process.env.E2E_MOCK_EXTERNAL_APIS === "1";
@@ -53,6 +53,8 @@ export async function placeOrderFor(
       shipToCity: address?.city,
       shipToState: address?.state,
       shipToPincode: address?.pincode,
+      amountPaid: amount,
+      discountAmount: discount?.valid ? discount.amountOff : null,
       items: {
         create: lines.map((line) => ({
           productId: line.productId,

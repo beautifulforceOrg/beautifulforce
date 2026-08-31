@@ -1,12 +1,72 @@
 import { createShiprocketProviderFromEnv, type ShipToAddress } from "@storeforge/shipping";
 import { db } from "@storeforge/db";
 
-// Shiprocket requires a non-zero package weight/size per order -- sized
-// for a folded frock/accessory in a poly mailer, not a general default
-// (see packages/shipping's README: every business ships different
-// things; apps/beautifulsilver uses a much smaller jewellery-box default).
+// Fallback only -- used per-item when a product is missing its own real
+// package weight/dimensions (e.g. a legacy catalog row from before these
+// fields existed). Sized for a folded frock/accessory in a poly mailer
+// (apps/beautifulsilver uses a much smaller jewellery-box fallback).
 export const PACKAGE_WEIGHT_KG = 0.3;
 export const PACKAGE_DIMENSIONS_CM = { length: 25, breadth: 20, height: 5 };
+
+interface PackageableItem {
+  quantity: number;
+  product: {
+    id: string;
+    packageWeightGrams: number | null;
+    packageLengthCm: number | null;
+    packageWidthCm: number | null;
+    packageHeightCm: number | null;
+  };
+}
+
+/**
+ * Aggregates real per-product package weight/dimensions across an
+ * order's line items, instead of sending Shiprocket the same flat
+ * constant for every order regardless of contents. Not a real 3D bin-
+ * packing model -- a conservative bounding-envelope approximation: the
+ * widest length/width across all items, with heights summed (as if
+ * items are stacked). Falls back to the flat constants, per item, only
+ * when that item's product is missing this data, logging so gaps get
+ * noticed and backfilled rather than silently mis-shipped forever.
+ */
+export function aggregatePackageForItems(items: PackageableItem[]): {
+  weightKg: number;
+  dimensionsCm: { length: number; breadth: number; height: number };
+} {
+  let totalWeightGrams = 0;
+  let maxLength = 0;
+  let maxWidth = 0;
+  let totalHeight = 0;
+
+  for (const item of items) {
+    const { product } = item;
+    const missingData =
+      product.packageWeightGrams === null ||
+      product.packageLengthCm === null ||
+      product.packageWidthCm === null ||
+      product.packageHeightCm === null;
+    if (missingData) {
+      console.warn(
+        `Product ${product.id} is missing package weight/dimensions -- using the default estimate for shipment creation.`
+      );
+    }
+
+    const weightGrams = product.packageWeightGrams ?? PACKAGE_WEIGHT_KG * 1000;
+    const lengthCm = product.packageLengthCm ?? PACKAGE_DIMENSIONS_CM.length;
+    const widthCm = product.packageWidthCm ?? PACKAGE_DIMENSIONS_CM.breadth;
+    const heightCm = product.packageHeightCm ?? PACKAGE_DIMENSIONS_CM.height;
+
+    totalWeightGrams += weightGrams * item.quantity;
+    maxLength = Math.max(maxLength, lengthCm);
+    maxWidth = Math.max(maxWidth, widthCm);
+    totalHeight += heightCm * item.quantity;
+  }
+
+  return {
+    weightKg: totalWeightGrams / 1000,
+    dimensionsCm: { length: maxLength, breadth: maxWidth, height: totalHeight },
+  };
+}
 
 function loadOrderForShipment(orderId: string) {
   return db.order.findUniqueOrThrow({
@@ -69,6 +129,8 @@ export async function createShipmentForOrder(orderId: string): Promise<void> {
     return;
   }
 
+  const { weightKg, dimensionsCm } = aggregatePackageForItems(order.items);
+
   const provider = createShiprocketProviderFromEnv();
   const shipment = await provider.createShipment({
     orderId: order.id,
@@ -80,8 +142,8 @@ export async function createShipmentForOrder(orderId: string): Promise<void> {
       units: item.quantity,
       sellingPrice: item.variant?.price ?? item.product.price,
     })),
-    packageWeightKg: PACKAGE_WEIGHT_KG,
-    dimensionsCm: PACKAGE_DIMENSIONS_CM,
+    packageWeightKg: weightKg,
+    dimensionsCm,
   });
 
   await db.order.update({

@@ -36,4 +36,12 @@ describe("createSessionToken / verifySessionToken", () => {
     expect(verifySessionToken("not-a-real-token")).toBeNull();
     expect(verifySessionToken("")).toBeNull();
   });
+
+  it("supports a custom, shorter max age -- used by the admin session", () => {
+    const issuedAt = Date.now();
+    const eightHours = 60 * 60 * 8;
+    const token = createSessionToken("admin_123", issuedAt, eightHours);
+    expect(verifySessionToken(token, issuedAt + eightHours * 1000 - 1000)).toBe("admin_123");
+    expect(verifySessionToken(token, issuedAt + eightHours * 1000 + 1000)).toBeNull();
+  });
 });

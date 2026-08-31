@@ -1,22 +1,42 @@
-import { describe, expect, it } from "vitest";
+import { db } from "@storeforge/db";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { applyDiscountCode } from "./discount";
 
+const ACTIVE_CODE = "TEST10";
+const INACTIVE_CODE = "TESTOLD";
+
+async function cleanup() {
+  await db.discountCode.deleteMany({ where: { code: { in: [ACTIVE_CODE, INACTIVE_CODE] } } });
+}
+
+beforeEach(async () => {
+  await cleanup();
+  await db.discountCode.create({ data: { code: ACTIVE_CODE, percentOff: 10, active: true } });
+  await db.discountCode.create({ data: { code: INACTIVE_CODE, percentOff: 20, active: false } });
+});
+
+afterAll(cleanup);
+
 describe("applyDiscountCode", () => {
-  it("applies MESS05 as 5% off", () => {
-    expect(applyDiscountCode("MESS05", 10000)).toEqual({
+  it("applies an active code as a fraction off", async () => {
+    expect(await applyDiscountCode(ACTIVE_CODE, 10000)).toEqual({
       valid: true,
-      code: "MESS05",
-      percentOff: 0.05,
-      amountOff: 500,
+      code: ACTIVE_CODE,
+      percentOff: 0.1,
+      amountOff: 1000,
     });
   });
 
-  it("is case-insensitive and trims whitespace", () => {
-    expect(applyDiscountCode("  mess05 ", 10000).valid).toBe(true);
+  it("is case-insensitive and trims whitespace", async () => {
+    expect((await applyDiscountCode(`  ${ACTIVE_CODE.toLowerCase()} `, 10000)).valid).toBe(true);
   });
 
-  it("rejects an unknown code", () => {
-    expect(applyDiscountCode("NOTREAL", 10000)).toEqual({
+  it("rejects a deactivated code", async () => {
+    expect((await applyDiscountCode(INACTIVE_CODE, 10000)).valid).toBe(false);
+  });
+
+  it("rejects an unknown code", async () => {
+    expect(await applyDiscountCode("NOTREAL", 10000)).toEqual({
       valid: false,
       code: "NOTREAL",
       percentOff: 0,
