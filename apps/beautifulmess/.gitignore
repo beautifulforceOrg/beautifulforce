@@ -1,1 +1,3 @@
 scripts/.imagekit-migration-mapping.json
+.vercel
+.env*
