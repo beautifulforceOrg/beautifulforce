@@ -53,7 +53,10 @@ before considering the task done:
   diagrams 1–2
 - A change to the checkout/payment/fulfillment flow, or to which webhook
   composition an app uses → diagram 3
-- A `packages/db` schema change → diagram 4
+- A `packages/db` schema change → diagram 4, **and** the full-column ER
+  diagram in `docs/db-schema.md` (the definitive picture of every table/
+  column in each storefront's real Neon database -- diagram 4 stays a
+  relations-only summary plus commentary and links there)
 - A `packages/ui` theming-contract change → diagram 5
 - A change to `packages/payments`' or `packages/shipping`'s webhook logic
   → diagrams 6–7

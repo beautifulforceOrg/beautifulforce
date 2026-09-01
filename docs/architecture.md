@@ -166,6 +166,10 @@ composes with either model unchanged.
 
 ## 4. `packages/db` schema
 
+Relations-only summary and the *why* behind each addition -- for every
+table's full column list (the actual shape of every storefront's real
+Neon database), see `docs/db-schema.md`.
+
 ```mermaid
 erDiagram
   Product ||--o{ ProductVariant : has
