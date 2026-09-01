@@ -76,3 +76,43 @@ To update:
 A new diagram (a new package, a new kind of flow) gets a new numbered
 section in both places, plus a `<a class="navlink">` entry in the
 artifact's nav and a wakeup in this file's list above.
+
+## Vercel plugin -- use it for Vercel-side work
+
+The [Vercel plugin for AI coding agents](https://vercel.com/docs/agent-resources/vercel-plugin)
+is installed (user scope, `vercel@claude-plugins-official`) and the
+`vercel` CLI is on `PATH` (installed via `bun install -g vercel`, run from
+a shell with `~/.bun/bin` on `PATH`). Prefer it over ad hoc `vercel`
+invocations or guessing at deploy/env behavior for anything touching a
+real Vercel project:
+
+- **Env vars**: `/vercel-plugin:env` (list/pull/add/remove/diff) instead
+  of hand-editing Vercel's dashboard or guessing var names — this is the
+  right tool whenever a task needs a new `.env.test.local.example` value
+  (Razorpay, Shiprocket, ImageKit, Google Maps, `ADMIN_ALLOWED_EMAILS`,
+  etc.) actually set on a real deployment, not just documented locally.
+- **Deploys**: `/vercel-plugin:deploy` for a preview, `/vercel-plugin:deploy prod`
+  for production. Production deploys are still a "confirm before acting"
+  action per this session's general risk rules — don't run it unprompted.
+- **Status**: `/vercel-plugin:status` for a project's recent deployments
+  and env overview instead of `vercel ls`/manual dashboard checks.
+- **Bootstrapping a new client app's Vercel project**: `/vercel-plugin:bootstrap`
+  — relevant the next time a storefront (e.g. `apps/beautifulsilver`) is
+  actually connected to a real Vercel project/domain, per the Isolation
+  rule above (own project, own domain, own credentials).
+- Specialist agents available on demand: `deployment-expert` (CI/CD,
+  deploy strategy, env troubleshooting), `performance-optimizer` (Core Web
+  Vitals, caching, asset optimization — useful for this repo's existing
+  Lighthouse-driven work, see `apps/beautifulmess`'s past `fetchPriority`
+  fix), `ai-architect` (not yet relevant here — no AI/LLM features exist
+  in this codebase today).
+- **Prerequisite**: the CLI must be logged in (`vercel whoami`) before any
+  of the above can touch a real project — if it isn't, ask the user to run
+  `vercel login` (interactive) rather than attempting to authenticate on
+  their behalf.
+- The plugin's skills (`nextjs`, `vercel-functions`, `env-vars`,
+  `deployments-cicd`, `react-best-practices`, etc.) are available on
+  demand even without a slash command — reach for them over general
+  knowledge when a question is specifically about Vercel/Next.js platform
+  behavior (caching semantics, Edge vs. Node runtime, deployment
+  protection, etc.).
