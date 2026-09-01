@@ -3,7 +3,6 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
-import * as Notifications from "expo-notifications";
 import { Button, ProductGrid, ThemeProvider, formatPrice, type StorefrontTheme } from "@storeforge/ui-native";
 import { createStorefrontApiClient, type ProductSummary } from "@storeforge/api-client";
 import { getApiBaseUrl } from "./lib/api-base-url";
@@ -11,16 +10,30 @@ import { createSecureTokenStorage } from "./lib/secure-token-storage";
 import { CartProvider, useCart } from "./lib/cart-context";
 import { registerForPushNotificationsAsync } from "./lib/register-for-push-notifications";
 
-// Foreground notifications still show a banner/sound in test mode, same
-// as a backgrounded app would get from the OS.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+// `expo-notifications` is imported dynamically wherever it's used in this
+// app (here and in lib/register-for-push-notifications.ts), never
+// statically -- merely loading that module now throws in Expo Go on
+// SDK 53+ (remote-notification support was removed from Expo Go itself),
+// and a static top-level import crashes the whole app before any
+// try/catch around a function call ever gets a chance to run.
+async function setUpNotificationHandler() {
+  try {
+    const Notifications = await import("expo-notifications");
+    // Foreground notifications still show a banner/sound in test mode,
+    // same as a backgrounded app would get from the OS.
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      }),
+    });
+  } catch {
+    // Expo Go (SDK 53+): no remote-notification support. A real
+    // dev-client/production build still gets this handler registered.
+  }
+}
 
 // Two placeholder StorefrontTheme objects -- standing in for what a real
 // client config (e.g. Beautiful Mess's) will supply. Swapping which one is
@@ -93,6 +106,7 @@ function StorefrontDemo() {
   useEffect(() => {
     let cancelled = false;
 
+    void setUpNotificationHandler();
     apiClient.isLoggedIn().then((loggedIn) => {
       if (cancelled) return;
       setIsLoggedIn(loggedIn);
@@ -120,11 +134,27 @@ function StorefrontDemo() {
     // Order-status pushes are received while this listener is mounted,
     // regardless of which screen the user is on -- shown here as a
     // banner-style message, the same authMessage slot the wishlist/login
-    // actions use.
-    const subscription = Notifications.addNotificationReceivedListener((notification) => {
-      setAuthMessage(notification.request.content.body ?? "New notification");
-    });
-    return () => subscription.remove();
+    // actions use. expo-notifications is imported dynamically (see
+    // setUpNotificationHandler's comment above) since merely loading it
+    // throws in Expo Go on SDK 53+.
+    let subscription: { remove: () => void } | undefined;
+    let cancelled = false;
+
+    import("expo-notifications")
+      .then((Notifications) => {
+        if (cancelled) return;
+        subscription = Notifications.addNotificationReceivedListener((notification) => {
+          setAuthMessage(notification.request.content.body ?? "New notification");
+        });
+      })
+      .catch(() => {
+        // Expo Go (SDK 53+): no remote-notification support.
+      });
+
+    return () => {
+      cancelled = true;
+      subscription?.remove();
+    };
   }, []);
 
   async function registerPushTokenIfPossible() {

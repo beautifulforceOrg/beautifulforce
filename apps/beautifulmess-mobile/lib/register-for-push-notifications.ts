@@ -1,6 +1,5 @@
 import Constants from "expo-constants";
 import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
 // Test-mode only: this fetches an Expo push token (works from Expo Go and
@@ -8,11 +7,19 @@ import { Platform } from "react-native";
 // the caller to register via api-client's registerPushToken(). Production
 // push (a real client's standalone app, its own APNs key/FCM project) is
 // an explicit follow-up in the mobile plan, not built here.
+//
+// `expo-notifications` is imported dynamically, not statically, because
+// merely loading that module now throws in Expo Go on SDK 53+ (remote-
+// notification support was removed from Expo Go itself) -- a static
+// top-level import would crash the whole app before this function's own
+// try/catch (in the caller) ever gets a chance to run.
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
   if (!Device.isDevice) {
     // Push tokens aren't issued to simulators/emulators.
     return null;
   }
+
+  const Notifications = await import("expo-notifications");
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {

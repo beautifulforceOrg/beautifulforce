@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import * as Notifications from "expo-notifications";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@storeforge/ui-native";
 import { CartProvider } from "../lib/cart-context";
@@ -9,19 +8,34 @@ import { BEAUTIFULMESS_THEME } from "../lib/theme";
 import { apiClient } from "../lib/api-client";
 import { registerForPushNotificationsAsync } from "../lib/register-for-push-notifications";
 
-// Foreground notifications still show a banner/sound in test mode, same
-// as a backgrounded app would get from the OS.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+// `expo-notifications` is imported dynamically wherever it's used in this
+// app (here and in lib/register-for-push-notifications.ts), never
+// statically -- merely loading that module now throws in Expo Go on
+// SDK 53+ (remote-notification support was removed from Expo Go itself),
+// and a static top-level import crashes the whole app before any
+// try/catch around a function call ever gets a chance to run.
+async function setUpNotificationHandler() {
+  try {
+    const Notifications = await import("expo-notifications");
+    // Foreground notifications still show a banner/sound in test mode,
+    // same as a backgrounded app would get from the OS.
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      }),
+    });
+  } catch {
+    // Expo Go (SDK 53+): no remote-notification support. A real
+    // dev-client/production build still gets this handler registered.
+  }
+}
 
 export default function RootLayout() {
   useEffect(() => {
+    void setUpNotificationHandler();
     apiClient.isLoggedIn().then((loggedIn) => {
       if (loggedIn) void registerPushTokenIfPossible();
     });
