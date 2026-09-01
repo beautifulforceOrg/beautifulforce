@@ -6,7 +6,10 @@ import { NextResponse, type NextRequest } from "next/server";
 // This just avoids a round trip to a guarded page for the common case of
 // no cookie at all; it never trusts the cookie's *contents*.
 export function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname === "/admin/login") {
+  // /admin/enter's whole job is to mint bm_admin_session for the first
+  // time (from an already-logged-in customer session) -- it must run
+  // even with no admin cookie yet, same as /admin/login.
+  if (request.nextUrl.pathname === "/admin/login" || request.nextUrl.pathname === "/admin/enter") {
     return NextResponse.next();
   }
 

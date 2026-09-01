@@ -37,7 +37,7 @@ const WHATSAPP_URL = "https://wa.me/+918088339455";
 // client's Shopify CDN.
 const LOGO_URL = "https://ik.imagekit.io/beautifulforce/beautifulmess/BM_Logo.png";
 
-export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
+export function SiteHeader({ isLoggedIn, isAdmin }: { isLoggedIn: boolean; isAdmin: boolean }) {
   const { lines } = useCart();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -127,6 +127,16 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               </div>
             </details>
             <Link href="/about">About Us</Link>
+            {isAdmin ? (
+              // Opens in a new tab (not a redirect of the current page) --
+              // an admin is usually mid-shop or mid-task on the storefront
+              // tab and shouldn't lose that to jump into the dashboard.
+              // /admin/enter re-authenticates using the existing customer
+              // session, no second password prompt.
+              <a href="/admin/enter" target="_blank" rel="noreferrer">
+                Admin
+              </a>
+            ) : null}
           </nav>
 
           <Link href="/" className="relative block h-12 w-32">
@@ -196,6 +206,11 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
             <Link className="py-3" href="/about" onClick={() => setMenuOpen(false)}>
               About Us
             </Link>
+            {isAdmin ? (
+              <a className="py-3" href="/admin/enter" target="_blank" rel="noreferrer">
+                Admin
+              </a>
+            ) : null}
           </nav>
         ) : null}
       </header>

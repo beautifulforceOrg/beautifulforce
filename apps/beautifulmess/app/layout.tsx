@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { ThemeProvider, type StorefrontTheme } from "@storeforge/ui";
 import { CartProvider } from "../lib/cart-context";
 import { getSessionCustomerId } from "../lib/auth";
+import { isCustomerAnAdmin } from "../lib/admin/auth";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { TrustBadges } from "./trust-badges";
@@ -53,14 +54,16 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const isLoggedIn = Boolean(await getSessionCustomerId());
+  const customerId = await getSessionCustomerId();
+  const isLoggedIn = Boolean(customerId);
+  const isAdmin = customerId ? await isCustomerAnAdmin(customerId) : false;
 
   return (
     <html lang="en" className={`${poppins.variable} ${cormorant.variable}`}>
       <body>
         <ThemeProvider theme={theme}>
           <CartProvider>
-            <SiteHeader isLoggedIn={isLoggedIn} />
+            <SiteHeader isLoggedIn={isLoggedIn} isAdmin={isAdmin} />
             {children}
             <TrustBadges />
             <SiteFooter />

@@ -1,13 +1,16 @@
 import { db } from "@storeforge/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { authenticateAdmin, hashPassword, isAllowedAdminEmail } from "./auth";
+import { authenticateAdmin, hashPassword, isAllowedAdminEmail, isCustomerAnAdmin } from "./auth";
 
 const ADMIN_EMAIL = "admin-auth-test@example.com";
 const OTHER_EMAIL = "not-an-admin@example.com";
 const PASSWORD = "correct horse battery";
 
+const ALLOWLISTED_NO_ROW_EMAIL = "other-admin@example.com";
+
 async function cleanup() {
   await db.adminUser.deleteMany({ where: { email: { in: [ADMIN_EMAIL, OTHER_EMAIL] } } });
+  await db.customer.deleteMany({ where: { email: { in: [ADMIN_EMAIL, OTHER_EMAIL, ALLOWLISTED_NO_ROW_EMAIL] } } });
 }
 
 beforeAll(() => {
@@ -64,5 +67,33 @@ describe("authenticateAdmin", () => {
 
     const admin = await db.adminUser.findUniqueOrThrow({ where: { email: ADMIN_EMAIL } });
     expect(admin.failedAttempts).toBe(0);
+  });
+});
+
+// A logged-in customer whose email matches an allowlisted AdminUser can
+// jump straight into the admin dashboard without re-entering the admin
+// password -- see the "Admin" tab in the site header. The actual session
+// cookie is only ever written from a real request (app/admin/enter/route.ts,
+// covered by e2e/admin-tab.spec.ts) -- cookies() throws outside a request
+// scope, so establishAdminSessionForCustomer itself isn't unit-tested here,
+// matching how createSession/createAdminSession aren't either.
+describe("isCustomerAnAdmin", () => {
+  it("recognizes a customer whose email matches an allowlisted AdminUser", async () => {
+    const customer = await db.customer.create({ data: { email: ADMIN_EMAIL } });
+    expect(await isCustomerAnAdmin(customer.id)).toBe(true);
+  });
+
+  it("rejects a customer whose email is not an admin", async () => {
+    const customer = await db.customer.create({ data: { email: OTHER_EMAIL } });
+    expect(await isCustomerAnAdmin(customer.id)).toBe(false);
+  });
+
+  it("rejects a customer email that is allowlisted but has no seeded AdminUser row", async () => {
+    const customer = await db.customer.create({ data: { email: ALLOWLISTED_NO_ROW_EMAIL } });
+    expect(await isCustomerAnAdmin(customer.id)).toBe(false);
+  });
+
+  it("returns false for a customer id that doesn't exist", async () => {
+    expect(await isCustomerAnAdmin("does-not-exist")).toBe(false);
   });
 });

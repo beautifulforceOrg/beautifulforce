@@ -240,8 +240,21 @@ See `packages/shipping/README.md`.
 
 `AdminUser`, `DiscountCode`, `Ticket`/`TicketComment` were added for
 `apps/beautifulmess`'s merchant admin dashboard -- `AdminUser` is kept
-entirely separate from `Customer` (admins are never shoppers and must
-never be reachable through a shopper-facing query); `DiscountCode`
+entirely separate from `Customer` (no foreign key between them, and
+`AdminUser` is never reachable through a shopper-facing query). The site
+header's "Admin" tab (`app/admin/enter/route.ts`,
+`lib/admin/auth.ts#establishAdminSessionForCustomer`) bridges the two at
+the session layer only: if a logged-in customer's email is both
+allowlisted (`ADMIN_ALLOWED_EMAILS`) and has a real `AdminUser` row, that
+route mints a real `bm_admin_session` cookie without a second password
+prompt. This is a deliberate trust decision (an admin's own account
+convenience over an extra security boundary), made explicitly at the
+client's request -- it does mean a hijacked customer session for that
+exact email becomes a hijacked admin session too, which the older
+"never shoppers" phrasing here used to rule out. `middleware.ts` exempts
+`/admin/enter` from its no-admin-cookie redirect the same way it exempts
+`/admin/login`, since establishing that first cookie is the route's job.
+`DiscountCode`
 replaces what was a hardcoded single-entry map in `lib/discount.ts`;
 `Ticket`/`TicketComment` are a lightweight support-request queue so a
 non-technical store owner can file bug/feature/change requests from

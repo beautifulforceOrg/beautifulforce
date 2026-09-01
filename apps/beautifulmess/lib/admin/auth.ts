@@ -81,6 +81,34 @@ export async function destroyAdminSession(): Promise<void> {
   cookieStore.delete(ADMIN_SESSION_COOKIE);
 }
 
+/**
+ * Bridges a logged-in customer session into the admin dashboard when that
+ * customer's email is both allowlisted and has a real AdminUser row --
+ * lets the "Admin" tab in the site header skip the separate admin
+ * password entirely for someone who is already both. Deliberately does
+ * NOT relax anything else: a non-matching customer, or one whose email
+ * was later removed from ADMIN_ALLOWED_EMAILS, still gets nothing.
+ */
+async function findAdminUserForCustomer(customerId: string) {
+  const customer = await db.customer.findUnique({ where: { id: customerId }, select: { email: true } });
+  if (!customer) return null;
+  const email = customer.email.trim().toLowerCase();
+  if (!isAllowedAdminEmail(email)) return null;
+  return db.adminUser.findUnique({ where: { email } });
+}
+
+export async function isCustomerAnAdmin(customerId: string): Promise<boolean> {
+  return (await findAdminUserForCustomer(customerId)) !== null;
+}
+
+/** Used by app/admin/enter/route.ts -- writes the real admin session cookie. */
+export async function establishAdminSessionForCustomer(customerId: string): Promise<boolean> {
+  const admin = await findAdminUserForCustomer(customerId);
+  if (!admin) return false;
+  await createAdminSession(admin.id);
+  return true;
+}
+
 export async function getSessionAdminId(): Promise<string | null> {
   const cookieStore = await cookies();
   const raw = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
