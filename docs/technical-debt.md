@@ -25,9 +25,6 @@ add an item when it's identified, remove it once it's actually resolved.
   first-party CSV content, reviewed for `<script>` tags before this was
   wired up. Would need real sanitization if the import pipeline ever
   accepts less-trusted (e.g. merchant-entered) HTML.
-- **Search is a plain case-insensitive substring match** on product name
-  only (`lib/catalog.ts#searchProducts`) — no fuzzy matching, no matching
-  on description/tags/SKU.
 - **`packages/db/prisma/schema.prisma` is a template each storefront
   manually copies** (per this repo's isolation model) — there's no
   tooling to detect or propagate schema drift between `apps/beautifulmess`
@@ -47,11 +44,11 @@ add an item when it's identified, remove it once it's actually resolved.
   session) wasn't confirmed before this was deferred -- verify that with
   Anthropic before committing to the approach.
 - **Abandoned-cart reminders** — the cart is now server-persisted
-  (`Cart`/`CartItem`, see `lib/cart-sync.ts`), so a real record of
-  in-progress carts exists to notice as "abandoned"; still blocked on
-  choosing a real email/SMS/WhatsApp provider (see
-  `docs/pending-actions.md`) and on scheduled/cron job infrastructure
-  (see Known Limitations below) to actually detect and send them.
+  (`Cart`/`CartItem`, see `lib/cart-sync.ts`) and scheduled-job
+  infrastructure now exists (`app/api/cron/`, see `docs/architecture.md`
+  diagram 13), so both real blockers are gone except choosing an actual
+  email/SMS/WhatsApp provider (see `docs/pending-actions.md`) to send
+  them through.
 - **Extend admin-managed content beyond Testimonials/FAQ** — the
   homepage's Ethos pillars, hero image, Instagram teaser images, and
   press logos are still hardcoded in `app/page.tsx`; the same
@@ -63,9 +60,6 @@ add an item when it's identified, remove it once it's actually resolved.
   no self-service option beyond viewing order status (consistent with
   the storefront's stated no-returns policy, but worth a deliberate
   product decision either way).
-- **Real full-text/fuzzy product search** if the catalog grows past what
-  substring matching handles well (e.g. Postgres full-text search or a
-  hosted search service).
 - **Phone+OTP customer login** — a full plan exists (see the session
   history / plan file `sorted-swimming-quail.md` if still present) but
   was never implemented; the web app still uses email+password, and the
@@ -111,10 +105,6 @@ add an item when it's identified, remove it once it's actually resolved.
   `lib/email.ts` is a validator only, not a sender — no order
   confirmation emails, no password-reset emails, nothing. Needed before
   password reset or abandoned-cart reminders can exist.
-- **No scheduled/cron job infrastructure** in this monorepo at all
-  (confirmed: no `vercel.json` crons config, no job-scheduling package)
-  — needed for abandoned-cart detection or any other time-based
-  background task.
 - **Admin accounts are seeded via a CLI script only**
   (`scripts/seed-admin-users.ts`) — no self-service admin invite/
   creation UI; adding a new admin requires running a script with direct

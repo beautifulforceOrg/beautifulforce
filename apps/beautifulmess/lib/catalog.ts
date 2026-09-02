@@ -30,18 +30,52 @@ export async function getCollectionBySlug(slug: string) {
   });
 }
 
-// Simple substring search over product names -- the real site's
-// predictive-search endpoint needs its own indexed backend, which this
-// storefront doesn't have; this covers the actual "find a product by
-// name" use case with what the catalog already has.
+// Postgres full-text search over name/description/tags, plus a plain
+// substring match on SKU (tsvector tokenizing splits "BM-GALAXY-042" into
+// separate lexemes, which plainto_tsquery's AND-of-words semantics
+// wouldn't match well against a search for just part of that code).
+// $queryRaw is used with a tagged template (parameterized, never string-
+// interpolated) -- never $queryRawUnsafe, per this repo's rules.
+// `description` is raw HTML (see Product.description's comment) so it's
+// stripped of tags before indexing, otherwise markup would pollute the
+// tsvector. Ranked by ts_rank so a name match outranks an incidental tag
+// match; results are then re-fetched through Prisma (for the same
+// images/variants shape every other catalog query returns) and put back
+// in rank order, since `findMany({ where: { id: { in } } })` doesn't
+// preserve the `in` list's order.
 export async function searchProducts(query: string) {
   const trimmed = query.trim();
   if (!trimmed) return [];
-  return db.product.findMany({
-    where: { isPublished: true, name: { contains: trimmed, mode: "insensitive" } },
+
+  const ranked = await db.$queryRaw<{ id: string }[]>`
+    SELECT id FROM "Product"
+    WHERE "isPublished" = true
+    AND (
+      to_tsvector('english',
+        coalesce(name, '') || ' ' ||
+        regexp_replace(coalesce(description, ''), '<[^>]*>', ' ', 'g') || ' ' ||
+        coalesce(tags, '')
+      ) @@ plainto_tsquery('english', ${trimmed})
+      OR sku ILIKE ${"%" + trimmed + "%"}
+    )
+    ORDER BY ts_rank(
+      to_tsvector('english',
+        coalesce(name, '') || ' ' ||
+        regexp_replace(coalesce(description, ''), '<[^>]*>', ' ', 'g') || ' ' ||
+        coalesce(tags, '')
+      ),
+      plainto_tsquery('english', ${trimmed})
+    ) DESC
+    LIMIT 24
+  `;
+  if (ranked.length === 0) return [];
+
+  const products = await db.product.findMany({
+    where: { id: { in: ranked.map((r) => r.id) } },
     include: { images: { orderBy: { position: "asc" }, take: 2 }, variants: { select: { stockQty: true } } },
-    take: 24,
   });
+  const byId = new Map(products.map((p) => [p.id, p]));
+  return ranked.map((r) => byId.get(r.id)).filter((p): p is NonNullable<typeof p> => p !== undefined);
 }
 
 export async function getFeaturedProducts(limit = 8) {

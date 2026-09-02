@@ -500,3 +500,49 @@ inlines the equivalent object literal itself. `buildExpoConfig()` stays
 the source of truth for what that merge should produce; switching
 `app.config.ts` back to calling it directly is a one-line change once the
 package gains a real CJS build output.
+
+## 13. Scheduled jobs (Vercel Cron)
+
+```mermaid
+sequenceDiagram
+  participant Cron as Vercel Cron
+  participant Route as GET /api/cron/cancel-stale-orders
+  participant Job as lib/jobs/cancel-stale-orders.ts
+  participant DB as Postgres
+
+  Note over Cron: vercel.json schedule (daily, 03:00 UTC)
+  Cron->>Route: GET, Authorization: Bearer CRON_SECRET
+  Route->>Route: compare header to process.env.CRON_SECRET
+  alt secret missing or wrong
+    Route-->>Cron: 401 Unauthorized
+  else secret matches
+    Route->>Job: cancelStaleOrders()
+    Job->>DB: UPDATE Order SET status='CANCELLED'\nWHERE status='PENDING' AND createdAt < now()-48h
+    DB-->>Job: count
+    Job-->>Route: count
+    Route-->>Cron: 200 { cancelledCount }
+  end
+```
+
+The first (and so far only) scheduled job in this monorepo -- added once
+a genuinely useful, low-risk time-based task existed: a checkout that
+starts but is never paid (an abandoned Razorpay flow, or a silent
+failure) leaves its `Order` row stuck at `PENDING` forever, cluttering
+the admin orders list. `cancelStaleOrders()` (`apps/beautifulmess/lib/jobs/`)
+sweeps those older than 48 hours to `CANCELLED` -- a plain status update,
+identical to what an admin could do manually from `/admin/orders/[id]`,
+just automatic. It never touches `PAID`/`FULFILLED`/already-`CANCELLED`
+orders regardless of age, and a `PENDING` order never has a Shiprocket
+shipment yet (that's only created on payment, see diagram 3), so there's
+nothing else to unwind.
+
+Auth follows [Vercel's own convention](https://vercel.com/docs/cron-jobs/manage-cron-jobs#securing-cron-jobs):
+Vercel Cron sends `Authorization: Bearer $CRON_SECRET` automatically for
+its own invocations against the schedule in `vercel.json`; the route
+rejects anything else with 401, the same shape as a webhook signature
+check (diagrams 6/7) but simpler since there's no payload to verify, just
+one shared secret. This is the template for any future scheduled job
+(e.g. abandoned-cart reminders, once a messaging provider is chosen, see
+`docs/technical-debt.md`) -- add a route under `app/api/cron/`, a
+`lib/jobs/` function with its own unit tests, and an entry in
+`vercel.json`.

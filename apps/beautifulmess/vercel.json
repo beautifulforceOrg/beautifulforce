@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/cancel-stale-orders",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
