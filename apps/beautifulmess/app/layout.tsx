@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Cormorant, Poppins } from "next/font/google";
 import type { ReactNode } from "react";
@@ -69,6 +70,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <SiteFooter />
           </CartProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

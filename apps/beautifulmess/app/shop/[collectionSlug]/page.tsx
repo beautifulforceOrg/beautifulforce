@@ -1,8 +1,24 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCollectionBySlug, getWishlistedProductIds } from "../../../lib/catalog";
 import { filterAndSortProducts } from "../../../lib/product-list";
 import { CatalogGrid } from "../../catalog-grid";
 import { SortFilterBar } from "./sort-filter-bar";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ collectionSlug: string }>;
+}): Promise<Metadata> {
+  const { collectionSlug } = await params;
+  const collection = await getCollectionBySlug(collectionSlug);
+  if (!collection) return {};
+
+  return {
+    title: `${collection.name} | Beautiful Mess`,
+    description: `Shop ${collection.name} from Beautiful Mess -- playful, elegant kidswear and accessories.`,
+  };
+}
 
 export default async function CollectionPage({
   params,
