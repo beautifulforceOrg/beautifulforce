@@ -80,6 +80,29 @@ A new diagram (a new package, a new kind of flow) gets a new numbered
 section in both places, plus a `<a class="navlink">` entry in the
 artifact's nav and a wakeup in this file's list above.
 
+## Pending actions log -- keep it current
+
+`docs/pending-actions.md` is a running, plain-language (non-technical,
+grouped by category) list of things that still need doing but can't be
+finished from inside the code alone — either they need the store owner
+to do something outside the codebase (register with an external
+service, make a decision only they can make), or they're blocked on
+something happening later (getting a real domain name, finalizing
+pricing, etc.).
+
+- **Whenever a task surfaces a new item like this**, add it to
+  `docs/pending-actions.md` under the right category (or a new one if
+  none fits) before considering the task done. Write it the way you'd
+  explain it to the store owner, not a developer -- no jargon, no file
+  paths.
+- **Whenever a listed item actually gets done** (the user registers
+  with the service, the domain arrives and gets configured, etc.),
+  delete it from the list rather than marking it done — the file should
+  only ever contain what's still outstanding.
+- This is separate from `docs/architecture.md`/`docs/db-schema.md`
+  (those document how the system *is built*); this file documents what
+  *still needs to happen*.
+
 ## Vercel plugin -- use it for Vercel-side work
 
 The [Vercel plugin for AI coding agents](https://vercel.com/docs/agent-resources/vercel-plugin)

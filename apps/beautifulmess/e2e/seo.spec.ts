@@ -63,6 +63,11 @@ test("a collection page has a canonical URL that ignores sort/filter query param
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/shop\/frocks$/);
 });
 
+test("no google-site-verification tag renders until GOOGLE_SITE_VERIFICATION is actually set", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('meta[name="google-site-verification"]')).toHaveCount(0);
+});
+
 test("every page carries the real LocalBusiness structured data", async ({ page }) => {
   await page.goto("/");
   const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();

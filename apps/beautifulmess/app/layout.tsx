@@ -73,6 +73,15 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [LOGO_URL],
   },
+  // Renders <meta name="google-site-verification" content="..."> only
+  // once GOOGLE_SITE_VERIFICATION is actually set -- a one-line paste of
+  // the code Google Search Console gives you when verifying this site
+  // (Settings > Ownership verification > HTML tag method, since there's
+  // no custom domain yet for DNS-based verification). See
+  // docs/pending-actions.md for the full Search Console follow-up.
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 // LocalBusiness (a Clothing Store subtype) JSON-LD -- real address/phone
