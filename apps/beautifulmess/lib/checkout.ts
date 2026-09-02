@@ -1,7 +1,7 @@
 import { db } from "@storeforge/db";
 import { calculateCartTotal, createRazorpayOrderFromEnv } from "@storeforge/payments";
 import type { AddressValue } from "@storeforge/ui";
-import { saveAddressFor } from "./account-settings";
+import { saveFirstAddressFor } from "./account-settings";
 import { applyDiscountCode } from "./discount";
 
 export interface CheckoutLine {
@@ -66,11 +66,13 @@ export async function placeOrderFor(
     },
   });
 
-  // Write-through save: a logged-in customer's next checkout is prefilled
-  // from this (see lib/account-actions.ts#getSavedAddress). Best-effort --
-  // never block order placement over this.
+  // Only auto-saves a customer's very first address (see
+  // saveFirstAddressFor) -- repeat orders to the same place don't pile
+  // up duplicate address-book entries; managing more than one is a
+  // deliberate action in account settings. Best-effort -- never block
+  // order placement over this.
   if (customerId && address) {
-    await saveAddressFor(customerId, address).catch(() => {});
+    await saveFirstAddressFor(customerId, address).catch(() => {});
   }
 
   return { gatewayOrderId, amount, isMocked };

@@ -142,18 +142,30 @@ model Customer {
   // per-device token table (Expo re-issues the same token across app
   // restarts on the same device, so re-registering just overwrites it).
   expoPushToken String?
-  // A single saved/last-used shipping address, write-through updated from
-  // Order.shipTo* every time a logged-in customer places an order (see
-  // lib/checkout.ts#placeOrderFor) and used to prefill checkout next time
-  // -- not a separate Address table/multi-address book, since nothing else
-  // needs more than "the one I used last" yet.
-  addressName     String?
-  addressPhone    String?
-  addressLine1    String?
-  addressLine2    String?
-  addressCity     String?
-  addressState    String?
-  addressPincode  String?
+  addresses     Address[]
+}
+
+// A customer's saved shipping address book -- replaces an earlier
+// single-saved-address design (one row per Customer, write-through
+// updated from Order.shipTo* on every checkout). `label` is a
+// customer-chosen name ("Home", "Office") to distinguish saved
+// addresses at checkout; `isDefault` marks which one prefills checkout,
+// with at most one true per customer (enforced in code, not the DB --
+// see lib/account-settings.ts).
+model Address {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label        String
+  name         String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  pincode      String
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
 }
 
 // A signed-in customer's saved products. Requires an account, unlike the

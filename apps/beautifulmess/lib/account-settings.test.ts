@@ -1,7 +1,17 @@
 import { db } from "@storeforge/db";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { hashPassword } from "./auth";
-import { changeEmailFor, changePasswordFor, getSavedAddressFor, saveAddressFor } from "./account-settings";
+import {
+  changeEmailFor,
+  changePasswordFor,
+  createAddressFor,
+  deleteAddressFor,
+  getDefaultAddressFor,
+  listAddressesFor,
+  saveFirstAddressFor,
+  setDefaultAddressFor,
+  updateAddressFor,
+} from "./account-settings";
 
 const EMAIL = "settings-test-customer@example.com";
 const OTHER_EMAIL = "settings-test-other@example.com";
@@ -67,10 +77,9 @@ describe("changePasswordFor", () => {
   });
 });
 
-describe("getSavedAddressFor / saveAddressFor", () => {
-  const ADDRESS = {
+describe("address book", () => {
+  const HOME = {
     name: "Priya Nair",
-    email: EMAIL,
     phone: "9999999999",
     addressLine1: "221 Residency Road",
     addressLine2: "Flat 12",
@@ -78,20 +87,107 @@ describe("getSavedAddressFor / saveAddressFor", () => {
     state: "Karnataka",
     pincode: "560025",
   };
+  const OFFICE = {
+    name: "Priya Nair",
+    phone: "8888888888",
+    addressLine1: "50 MG Road",
+    addressLine2: "",
+    city: "Bengaluru",
+    state: "Karnataka",
+    pincode: "560001",
+  };
 
-  it("returns null when no address has been saved yet", async () => {
-    expect(await getSavedAddressFor(customerId)).toBeNull();
+  describe("createAddressFor / listAddressesFor / getDefaultAddressFor", () => {
+    it("returns an empty list and no default when nothing is saved yet", async () => {
+      expect(await listAddressesFor(customerId)).toEqual([]);
+      expect(await getDefaultAddressFor(customerId)).toBeNull();
+    });
+
+    it("makes the first saved address the default automatically", async () => {
+      const created = await createAddressFor(customerId, "Home", HOME);
+      expect(created.isDefault).toBe(true);
+
+      const list = await listAddressesFor(customerId);
+      expect(list).toHaveLength(1);
+      expect(list[0]).toMatchObject({ label: "Home", ...HOME, isDefault: true });
+      expect(await getDefaultAddressFor(customerId)).toMatchObject({ label: "Home" });
+    });
+
+    it("does not make a second address the default", async () => {
+      await createAddressFor(customerId, "Home", HOME);
+      const office = await createAddressFor(customerId, "Office", OFFICE);
+      expect(office.isDefault).toBe(false);
+      expect(await listAddressesFor(customerId)).toHaveLength(2);
+    });
   });
 
-  it("saves and returns the address", async () => {
-    await saveAddressFor(customerId, ADDRESS);
-    expect(await getSavedAddressFor(customerId)).toEqual(ADDRESS);
+  describe("updateAddressFor", () => {
+    it("updates the address's fields and label", async () => {
+      const created = await createAddressFor(customerId, "Home", HOME);
+      const result = await updateAddressFor(customerId, created.id, "New Home", { ...HOME, city: "Mumbai" });
+      expect(result).toEqual({});
+
+      const list = await listAddressesFor(customerId);
+      expect(list[0]).toMatchObject({ label: "New Home", city: "Mumbai" });
+    });
+
+    it("rejects updating another customer's address", async () => {
+      const otherCustomer = await db.customer.create({ data: { email: OTHER_EMAIL } });
+      const theirs = await createAddressFor(otherCustomer.id, "Home", HOME);
+      const result = await updateAddressFor(customerId, theirs.id, "Hijacked", OFFICE);
+      expect(result.error).toBe("Address not found.");
+    });
   });
 
-  it("overwrites a previously saved address", async () => {
-    await saveAddressFor(customerId, ADDRESS);
-    const updated = { ...ADDRESS, city: "Mumbai", pincode: "400001" };
-    await saveAddressFor(customerId, updated);
-    expect(await getSavedAddressFor(customerId)).toEqual(updated);
+  describe("deleteAddressFor", () => {
+    it("promotes the most recent remaining address to default when the default is deleted", async () => {
+      const home = await createAddressFor(customerId, "Home", HOME);
+      const office = await createAddressFor(customerId, "Office", OFFICE);
+      expect(home.isDefault).toBe(true);
+
+      await deleteAddressFor(customerId, home.id);
+
+      const list = await listAddressesFor(customerId);
+      expect(list).toHaveLength(1);
+      expect(list[0]).toMatchObject({ id: office.id, isDefault: true });
+    });
+
+    it("rejects deleting another customer's address", async () => {
+      const otherCustomer = await db.customer.create({ data: { email: OTHER_EMAIL } });
+      const theirs = await createAddressFor(otherCustomer.id, "Home", HOME);
+      const result = await deleteAddressFor(customerId, theirs.id);
+      expect(result.error).toBe("Address not found.");
+      expect(await listAddressesFor(otherCustomer.id)).toHaveLength(1);
+    });
+  });
+
+  describe("setDefaultAddressFor", () => {
+    it("switches the default to the chosen address and unsets the old one", async () => {
+      const home = await createAddressFor(customerId, "Home", HOME);
+      const office = await createAddressFor(customerId, "Office", OFFICE);
+
+      await setDefaultAddressFor(customerId, office.id);
+
+      const list = await listAddressesFor(customerId);
+      expect(list.find((a) => a.id === office.id)?.isDefault).toBe(true);
+      expect(list.find((a) => a.id === home.id)?.isDefault).toBe(false);
+    });
+  });
+
+  describe("saveFirstAddressFor", () => {
+    it("saves the address when the customer has none yet", async () => {
+      await saveFirstAddressFor(customerId, HOME);
+      const list = await listAddressesFor(customerId);
+      expect(list).toHaveLength(1);
+      expect(list[0]).toMatchObject({ label: "Home", isDefault: true, ...HOME });
+    });
+
+    it("does nothing if the customer already has a saved address", async () => {
+      await createAddressFor(customerId, "Home", HOME);
+      await saveFirstAddressFor(customerId, OFFICE);
+      const list = await listAddressesFor(customerId);
+      expect(list).toHaveLength(1);
+      expect(list[0]).toMatchObject(HOME);
+    });
   });
 });

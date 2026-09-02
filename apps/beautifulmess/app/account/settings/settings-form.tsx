@@ -52,6 +52,12 @@ export function AccountSettingsForm() {
         </Link>
       </p>
 
+      <p className="mb-8 text-sm">
+        <Link href="/account/addresses" className="text-brand underline">
+          Manage saved addresses
+        </Link>
+      </p>
+
       <section aria-label="Change email">
         <h2 className="font-heading mb-4 text-xl text-foreground">Change email</h2>
         <form action={handleChangeEmail} className="space-y-4">

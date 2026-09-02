@@ -71,6 +71,9 @@ test("account, checkout, order status, and account settings pages have no access
   await page.goto("/account/settings");
   await expectNoViolations(page);
 
+  await page.goto("/account/addresses");
+  await expectNoViolations(page);
+
   await page.goto("/products/beige-sleeveless-3d-floral-frock");
   await page.getByRole("radio", { name: "5-6-years" }).click();
   await page.getByRole("button", { name: "Add to cart" }).click();

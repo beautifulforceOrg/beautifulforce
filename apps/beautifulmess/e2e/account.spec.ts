@@ -134,12 +134,107 @@ test("a returning customer's checkout address is saved and prefilled next time",
   await page.getByRole("button", { name: "Pay now" }).click();
   await page.waitForURL(/\/orders\/.+/);
 
-  // A second order should arrive at checkout with the same address already filled in.
+  // A second order should arrive at checkout with the saved address
+  // already selected in the picker (the plain address form is only
+  // shown for "Use a new address" -- see app/checkout/page.tsx).
   await page.goto("/products/beige-sleeveless-3d-floral-frock");
   await page.getByRole("radio", { name: "5-6-years" }).click();
   await page.getByRole("button", { name: "Add to cart" }).click();
   await page.goto("/checkout");
-  await expect(page.getByLabel("Full name")).toHaveValue("Saved Address Test");
-  await expect(page.getByLabel("Address", { exact: true })).toHaveValue("42 Saved Address Lane");
-  await expect(page.getByLabel("City")).toHaveValue("Chennai");
+  await expect(page.getByText(/Home.*Saved Address Test, 42 Saved Address Lane, Chennai/)).toBeVisible();
+  await expect(page.getByLabel("Full name")).not.toBeVisible();
+  await page.getByRole("button", { name: "Pay now" }).click();
+  await page.waitForURL(/\/orders\/.+/);
+});
+
+test.describe("saved address book", () => {
+  async function signUp(page: import("@playwright/test").Page, email: string) {
+    await page.goto("/account/signup");
+    await page.getByPlaceholder("Email", { exact: true }).fill(email);
+    await page.getByPlaceholder(/Password/).fill("correct horse battery");
+    await page.getByRole("button", { name: "Create account" }).click();
+    await page.waitForURL(/\/account$/);
+  }
+
+  test("a customer can add, edit, set default, and remove saved addresses", async ({ page }) => {
+    const email = `e2e_addresses_${Date.now()}@example.com`;
+    await signUp(page, email);
+
+    await page.goto("/account/addresses");
+    await expect(page.getByText("No saved addresses yet.")).toBeVisible();
+
+    await page.getByPlaceholder("Label (e.g. Home, Office)").fill("Home");
+    await page.getByPlaceholder("Full name").fill("Address Book Test");
+    await page.getByPlaceholder("Phone number").fill("9876500010");
+    await page.getByPlaceholder("Address", { exact: true }).fill("1 First Address Road");
+    await page.getByPlaceholder("City").fill("Bengaluru");
+    await page.getByPlaceholder("State").fill("Karnataka");
+    await page.getByPlaceholder("Pincode").fill("560001");
+    await page.getByRole("button", { name: "Add address" }).click();
+    await expect(page.getByText("1 First Address Road")).toBeVisible();
+    await expect(page.getByText("Default")).toBeVisible();
+
+    // A second address is not the default automatically.
+    await page.getByRole("button", { name: "Add a new address" }).click();
+    await page.getByPlaceholder("Label (e.g. Home, Office)").fill("Office");
+    await page.getByPlaceholder("Full name").fill("Address Book Test");
+    await page.getByPlaceholder("Phone number").fill("9876500011");
+    await page.getByPlaceholder("Address", { exact: true }).fill("2 Second Address Road");
+    await page.getByPlaceholder("City").fill("Bengaluru");
+    await page.getByPlaceholder("State").fill("Karnataka");
+    await page.getByPlaceholder("Pincode").fill("560002");
+    await page.getByRole("button", { name: "Add address" }).click();
+    await expect(page.getByText("2 Second Address Road")).toBeVisible();
+
+    const officeCard = page.locator("li", { hasText: "2 Second Address Road" });
+    await officeCard.getByRole("button", { name: "Set as default" }).click();
+    await expect(officeCard.getByText("Default")).toBeVisible();
+
+    // Located by its stable label, not the address line -- that changes below.
+    const homeCard = page.locator("li").filter({ has: page.getByText("Home", { exact: true }) });
+    await homeCard.getByRole("button", { name: "Edit" }).click();
+    await page.getByPlaceholder("Address", { exact: true }).fill("1 Edited Address Road");
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByText("1 Edited Address Road")).toBeVisible();
+
+    await homeCard.getByRole("button", { name: "Remove" }).click();
+    await expect(page.getByText("1 Edited Address Road")).toHaveCount(0);
+    await expect(officeCard.getByText("Default")).toBeVisible();
+  });
+
+  test("checkout shows a picker to choose between multiple saved addresses", async ({ page }) => {
+    const email = `e2e_address_picker_${Date.now()}@example.com`;
+    await signUp(page, email);
+
+    await page.goto("/account/addresses");
+    for (const [label, road] of [
+      ["Home", "10 Home Road"],
+      ["Office", "20 Office Road"],
+    ] as const) {
+      await page.getByPlaceholder("Label (e.g. Home, Office)").fill(label);
+      await page.getByPlaceholder("Full name").fill("Picker Test");
+      await page.getByPlaceholder("Phone number").fill("9876500020");
+      await page.getByPlaceholder("Address", { exact: true }).fill(road);
+      await page.getByPlaceholder("City").fill("Bengaluru");
+      await page.getByPlaceholder("State").fill("Karnataka");
+      await page.getByPlaceholder("Pincode").fill("560001");
+      await page.getByRole("button", { name: "Add address" }).click();
+      await expect(page.getByText(road)).toBeVisible();
+      if (label === "Home") await page.getByRole("button", { name: "Add a new address" }).click();
+    }
+
+    await page.goto("/products/beige-sleeveless-3d-floral-frock");
+    await page.getByRole("radio", { name: "5-6-years" }).click();
+    await page.getByRole("button", { name: "Add to cart" }).click();
+    await page.goto("/checkout");
+
+    await expect(page.getByText(/Home.*10 Home Road/)).toBeVisible();
+    await expect(page.getByText(/Office.*20 Office Road/)).toBeVisible();
+    await expect(page.getByRole("radio", { name: /Home.*10 Home Road/ })).toBeChecked();
+
+    await page.getByRole("radio", { name: /Office.*20 Office Road/ }).check();
+    await page.getByRole("radio", { name: "Use a new address" }).check();
+    await expect(page.getByLabel("Full name")).toBeVisible();
+    await expect(page.getByLabel("Full name")).toHaveValue("");
+  });
 });

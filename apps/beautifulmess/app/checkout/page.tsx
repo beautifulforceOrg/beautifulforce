@@ -4,7 +4,8 @@ import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { AddressForm, CartSummary, formatPrice, type AddressValue } from "@storeforge/ui";
-import { getSavedAddress } from "../../lib/account-actions";
+import { getCheckoutAddressData } from "../../lib/account-actions";
+import type { SavedAddress } from "../../lib/account-settings";
 import { placeOrder } from "../../lib/actions";
 import { useCart } from "../../lib/cart-context";
 import { previewDiscountCode } from "../../lib/discount-actions";
@@ -36,10 +37,29 @@ function isAddressComplete(address: AddressValue): boolean {
   );
 }
 
+// A real saved address's id, or this sentinel for "enter a new one" --
+// keeps the picker's selection state to one variable instead of two.
+const NEW_ADDRESS = "__new__";
+
+function toAddressValue(saved: SavedAddress, email: string): AddressValue {
+  return {
+    name: saved.name,
+    email,
+    phone: saved.phone,
+    addressLine1: saved.addressLine1,
+    addressLine2: saved.addressLine2,
+    city: saved.city,
+    state: saved.state,
+    pincode: saved.pincode,
+  };
+}
+
 export default function CheckoutPage() {
   const { lines, clear } = useCart();
   const router = useRouter();
   const [address, setAddress] = useState<AddressValue>(EMPTY_ADDRESS);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(NEW_ADDRESS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -47,15 +67,33 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState<DiscountResult | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
 
-  // Prefills a returning logged-in customer's last-used address (see
-  // lib/account-settings.ts#getSavedAddressFor) so they don't retype it
-  // every order -- a no-op (getSavedAddress resolves null) for guests or
-  // a customer who's never checked out before.
+  // Prefills a returning logged-in customer's saved address book (see
+  // lib/account-settings.ts) so they don't retype it every order -- a
+  // no-op (resolves null) for guests or a customer who's never checked
+  // out before, who just see the plain address form.
   useEffect(() => {
-    getSavedAddress().then((saved) => {
-      if (saved) setAddress(saved);
+    getCheckoutAddressData().then((data) => {
+      if (!data) return;
+      setSavedAddresses(data.addresses);
+      const defaultAddress = data.addresses[0];
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.id);
+        setAddress(toAddressValue(defaultAddress, data.email));
+      } else {
+        setAddress((current) => ({ ...current, email: data.email }));
+      }
     });
   }, []);
+
+  function handleSelectAddress(id: string, email: string) {
+    setSelectedAddressId(id);
+    if (id === NEW_ADDRESS) {
+      setAddress({ ...EMPTY_ADDRESS, email });
+      return;
+    }
+    const saved = savedAddresses.find((a) => a.id === id);
+    if (saved) setAddress(toAddressValue(saved, email));
+  }
 
   const subtotal = lines.reduce((total, line) => total + line.price * line.quantity, 0);
   const total = discount?.valid ? subtotal - discount.amountOff : subtotal;
@@ -171,11 +209,45 @@ export default function CheckoutPage() {
       </div>
 
       <div className="mt-8">
-        <AddressForm
-          value={address}
-          onChange={setAddress}
-          googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-        />
+        {savedAddresses.length > 0 ? (
+          <fieldset className="mb-6 space-y-2">
+            <legend className="mb-2 text-sm font-medium text-foreground">Delivery address</legend>
+            {savedAddresses.map((saved) => (
+              <label
+                key={saved.id}
+                className="flex cursor-pointer items-start gap-2 rounded-[var(--sf-radius,0.5rem)] border border-border p-3 text-sm text-foreground"
+              >
+                <input
+                  type="radio"
+                  name="savedAddress"
+                  checked={selectedAddressId === saved.id}
+                  onChange={() => handleSelectAddress(saved.id, address.email)}
+                />
+                <span>
+                  <span className="font-medium">{saved.label}</span> &mdash; {saved.name}, {saved.addressLine1},{" "}
+                  {saved.city}, {saved.state} {saved.pincode}
+                </span>
+              </label>
+            ))}
+            <label className="flex cursor-pointer items-center gap-2 rounded-[var(--sf-radius,0.5rem)] border border-border p-3 text-sm text-foreground">
+              <input
+                type="radio"
+                name="savedAddress"
+                checked={selectedAddressId === NEW_ADDRESS}
+                onChange={() => handleSelectAddress(NEW_ADDRESS, address.email)}
+              />
+              Use a new address
+            </label>
+          </fieldset>
+        ) : null}
+
+        {selectedAddressId === NEW_ADDRESS ? (
+          <AddressForm
+            value={address}
+            onChange={setAddress}
+            googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+          />
+        ) : null}
       </div>
 
       {error ? (

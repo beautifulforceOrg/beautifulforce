@@ -15,7 +15,22 @@ async function cleanup() {
 beforeEach(async () => {
   await cleanup();
   const customer = await db.customer.create({
-    data: { email: EMAIL, name: "Admin Customers Test", addressPhone: "9876543210" },
+    data: {
+      email: EMAIL,
+      name: "Admin Customers Test",
+      addresses: {
+        create: {
+          label: "Home",
+          name: "Admin Customers Test",
+          phone: "9876543210",
+          addressLine1: "1 Test Street",
+          city: "Bengaluru",
+          state: "Karnataka",
+          pincode: "560001",
+          isDefault: true,
+        },
+      },
+    },
   });
   customerId = customer.id;
   await db.customer.create({ data: { email: OTHER_EMAIL } });
@@ -24,7 +39,7 @@ beforeEach(async () => {
 afterAll(cleanup);
 
 describe("listCustomers", () => {
-  it("lists a customer with their phone (from addressPhone) and a zero order count", async () => {
+  it("lists a customer with their phone (from their default saved address) and a zero order count", async () => {
     const customers = await listCustomers();
     const found = customers.find((c) => c.id === customerId);
     expect(found).toMatchObject({ email: EMAIL, name: "Admin Customers Test", phone: "9876543210", orderCount: 0 });

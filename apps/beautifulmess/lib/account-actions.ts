@@ -2,8 +2,18 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@storeforge/db";
-import type { AddressValue } from "@storeforge/ui";
-import { changeEmailFor, changePasswordFor, getSavedAddressFor, type SettingsResult } from "./account-settings";
+import {
+  changeEmailFor,
+  changePasswordFor,
+  createAddressFor,
+  deleteAddressFor,
+  listAddressesFor,
+  setDefaultAddressFor,
+  updateAddressFor,
+  type AddressInput,
+  type SavedAddress,
+  type SettingsResult,
+} from "./account-settings";
 import { createSession, destroySession, getSessionCustomerId, hashPassword, verifyPassword } from "./auth";
 import { toggleWishlistFor } from "./wishlist";
 
@@ -73,10 +83,51 @@ export async function changePassword(formData: FormData): Promise<SettingsResult
   return changePasswordFor(customerId, currentPassword, newPassword);
 }
 
-export async function getSavedAddress(): Promise<AddressValue | null> {
+/**
+ * Used by app/checkout/page.tsx: the saved address book (to prefill the
+ * default and offer a picker) plus the customer's own email, which
+ * Address rows never store (AddressValue's `email` field is always the
+ * logged-in customer's, not per-address).
+ */
+export async function getCheckoutAddressData(): Promise<{ email: string; addresses: SavedAddress[] } | null> {
   const customerId = await getSessionCustomerId();
   if (!customerId) return null;
-  return getSavedAddressFor(customerId);
+
+  const customer = await db.customer.findUnique({ where: { id: customerId }, select: { email: true } });
+  if (!customer) return null;
+
+  return { email: customer.email, addresses: await listAddressesFor(customerId) };
+}
+
+export async function listAddresses(): Promise<SavedAddress[]> {
+  const customerId = await getSessionCustomerId();
+  if (!customerId) return [];
+  return listAddressesFor(customerId);
+}
+
+export async function createAddress(label: string, address: AddressInput): Promise<SettingsResult> {
+  const customerId = await getSessionCustomerId();
+  if (!customerId) return { error: "You must be logged in." };
+  await createAddressFor(customerId, label, address);
+  return {};
+}
+
+export async function updateAddress(addressId: string, label: string, address: AddressInput): Promise<SettingsResult> {
+  const customerId = await getSessionCustomerId();
+  if (!customerId) return { error: "You must be logged in." };
+  return updateAddressFor(customerId, addressId, label, address);
+}
+
+export async function deleteAddress(addressId: string): Promise<SettingsResult> {
+  const customerId = await getSessionCustomerId();
+  if (!customerId) return { error: "You must be logged in." };
+  return deleteAddressFor(customerId, addressId);
+}
+
+export async function setDefaultAddress(addressId: string): Promise<SettingsResult> {
+  const customerId = await getSessionCustomerId();
+  if (!customerId) return { error: "You must be logged in." };
+  return setDefaultAddressFor(customerId, addressId);
 }
 
 export async function toggleWishlist(productId: string): Promise<{ wishlisted: boolean; requiresLogin?: boolean }> {
