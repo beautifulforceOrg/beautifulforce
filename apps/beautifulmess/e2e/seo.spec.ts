@@ -37,3 +37,37 @@ test("robots.txt disallows account/checkout/admin and points at the sitemap", as
   expect(body).toContain("Disallow: /admin");
   expect(body).toContain("Sitemap:");
 });
+
+test("a product page has canonical, Open Graph, Twitter card, and Product JSON-LD structured data", async ({
+  page,
+}) => {
+  await page.goto("/products/beige-sleeveless-3d-floral-frock");
+
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /\/products\/beige-sleeveless-3d-floral-frock$/
+  );
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /BEIGE SLEEVELESS/i);
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
+
+  const jsonLd = await page.locator('script[type="application/ld+json"]').last().textContent();
+  const data = JSON.parse(jsonLd ?? "{}");
+  expect(data["@type"]).toBe("Product");
+  expect(data.offers["@type"]).toBe("Offer");
+  expect(data.offers.priceCurrency).toBe("INR");
+  expect(["https://schema.org/InStock", "https://schema.org/OutOfStock"]).toContain(data.offers.availability);
+});
+
+test("a collection page has a canonical URL that ignores sort/filter query params", async ({ page }) => {
+  await page.goto("/shop/frocks?sort=price-ascending&minPrice=1000");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/shop\/frocks$/);
+});
+
+test("every page carries the real LocalBusiness structured data", async ({ page }) => {
+  await page.goto("/");
+  const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
+  const localBusiness = scripts.map((s) => JSON.parse(s)).find((d) => d["@type"] === "ClothingStore");
+  expect(localBusiness).toBeDefined();
+  expect(localBusiness.telephone).toBe("+918088339455");
+  expect(localBusiness.address.addressLocality).toBe("Bengaluru");
+});

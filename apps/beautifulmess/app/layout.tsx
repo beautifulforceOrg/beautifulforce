@@ -6,6 +6,7 @@ import { ThemeProvider, type StorefrontTheme } from "@storeforge/ui";
 import { CartProvider } from "../lib/cart-context";
 import { getSessionCustomerId } from "../lib/auth";
 import { isCustomerAnAdmin } from "../lib/admin/auth";
+import { BUSINESS_INFO, LOGO_URL, SITE_NAME, SITE_URL } from "../lib/site-config";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { TrustBadges } from "./trust-badges";
@@ -49,9 +50,51 @@ const theme: StorefrontTheme = {
   fontHeading: "var(--font-cormorant), serif",
 };
 
+const SITE_DESCRIPTION = "Playful, elegant kidswear and accessories from Beautiful Mess.";
+
 export const metadata: Metadata = {
-  title: "Beautiful Mess",
-  description: "Playful, elegant kidswear and accessories from Beautiful Mess.",
+  // Lets every relative image URL in per-page metadata (generateMetadata's
+  // openGraph.images, etc.) resolve correctly -- unset before, which is a
+  // real (if minor) gap for any page that hands Next.js a relative path.
+  metadataBase: new URL(SITE_URL),
+  title: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: "/",
+    siteName: SITE_NAME,
+    images: [{ url: LOGO_URL }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [LOGO_URL],
+  },
+};
+
+// LocalBusiness (a Clothing Store subtype) JSON-LD -- real address/phone
+// already shown on-page (site-footer.tsx, help/contact/page.tsx), not
+// invented. Site-wide rather than homepage-only, matching how most small
+// real-world business sites surface this on every page.
+const LOCAL_BUSINESS_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "ClothingStore",
+  name: BUSINESS_INFO.name,
+  image: LOGO_URL,
+  url: SITE_URL,
+  telephone: BUSINESS_INFO.telephone,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: BUSINESS_INFO.streetAddress,
+    addressLocality: BUSINESS_INFO.addressLocality,
+    addressRegion: BUSINESS_INFO.addressRegion,
+    postalCode: BUSINESS_INFO.postalCode,
+    addressCountry: BUSINESS_INFO.addressCountry,
+  },
+  sameAs: [BUSINESS_INFO.instagramUrl, BUSINESS_INFO.facebookUrl],
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
@@ -62,6 +105,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="en" className={`${poppins.variable} ${cormorant.variable}`}>
       <body>
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line no-restricted-syntax -- JSON.stringify of our own static, code-defined object, never user input
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(LOCAL_BUSINESS_JSON_LD) }}
+        />
         <ThemeProvider theme={theme}>
           <CartProvider>
             <SiteHeader isLoggedIn={isLoggedIn} isAdmin={isAdmin} />

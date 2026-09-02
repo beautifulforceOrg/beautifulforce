@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCollectionBySlug, getWishlistedProductIds } from "../../../lib/catalog";
 import { filterAndSortProducts } from "../../../lib/product-list";
+import { SITE_NAME } from "../../../lib/site-config";
 import { CatalogGrid } from "../../catalog-grid";
 import { SortFilterBar } from "./sort-filter-bar";
 
@@ -14,9 +15,20 @@ export async function generateMetadata({
   const collection = await getCollectionBySlug(collectionSlug);
   if (!collection) return {};
 
+  const title = `${collection.name} | ${SITE_NAME}`;
+  const description = `Shop ${collection.name} from Beautiful Mess -- playful, elegant kidswear and accessories.`;
+  // Canonical deliberately omits sort/filter query params (?sort=,
+  // ?minPrice=, etc.) -- those are the same underlying page/content to a
+  // search engine, and treating them as distinct URLs risks duplicate-
+  // content flags for no real benefit.
+  const canonical = `/shop/${collectionSlug}`;
+
   return {
-    title: `${collection.name} | Beautiful Mess`,
-    description: `Shop ${collection.name} from Beautiful Mess -- playful, elegant kidswear and accessories.`,
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 
