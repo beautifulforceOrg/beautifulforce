@@ -4,12 +4,14 @@ import { customersToCsv, listCustomers } from "./customers";
 
 const EMAIL = "admin-customers-test@example.com";
 const OTHER_EMAIL = "admin-customers-test-2@example.com";
+const LEGACY_PHONE = "9123456780";
 
 let customerId: string;
 
 async function cleanup() {
   await db.order.deleteMany({ where: { customer: { email: { in: [EMAIL, OTHER_EMAIL] } } } });
   await db.customer.deleteMany({ where: { email: { in: [EMAIL, OTHER_EMAIL] } } });
+  await db.customer.deleteMany({ where: { phone: LEGACY_PHONE } });
 }
 
 beforeEach(async () => {
@@ -61,6 +63,36 @@ describe("listCustomers", () => {
     const found = customers.find((c) => c.email === OTHER_EMAIL);
     expect(found?.phone).toBeNull();
   });
+
+  it("lists a legacy phone-only contact (no email, no address) using Customer.phone directly", async () => {
+    await db.customer.create({ data: { phone: LEGACY_PHONE, name: "Legacy Contact" } });
+    const customers = await listCustomers();
+    const found = customers.find((c) => c.phone === LEGACY_PHONE);
+    expect(found).toMatchObject({ email: null, name: "Legacy Contact", phone: LEGACY_PHONE });
+  });
+
+  it("prefers Customer.phone over the default address's phone when both are set", async () => {
+    await db.customer.create({
+      data: {
+        phone: LEGACY_PHONE,
+        addresses: {
+          create: {
+            label: "Home",
+            name: "Someone",
+            phone: "9876500000",
+            addressLine1: "2 Test Street",
+            city: "Bengaluru",
+            state: "Karnataka",
+            pincode: "560001",
+            isDefault: true,
+          },
+        },
+      },
+    });
+    const customers = await listCustomers();
+    const found = customers.find((c) => c.phone === LEGACY_PHONE);
+    expect(found?.phone).toBe(LEGACY_PHONE);
+  });
 });
 
 describe("customersToCsv", () => {
@@ -79,5 +111,20 @@ describe("customersToCsv", () => {
     const lines = csv.split("\n");
     expect(lines[0]).toBe("Name,Email,Phone,Order Count,Last Order,Joined");
     expect(lines[1]).toBe('"Jane ""JJ"" Doe","a@example.com","9999999999","3","2026-02-15","2026-01-01"');
+  });
+
+  it("renders a blank email for a legacy phone-only contact", async () => {
+    const csv = customersToCsv([
+      {
+        id: "1",
+        email: null,
+        name: "Legacy Contact",
+        phone: "9123456780",
+        createdAt: new Date("2026-01-01"),
+        orderCount: 0,
+        lastOrderAt: null,
+      },
+    ]);
+    expect(csv.split("\n")[1]).toBe('"Legacy Contact","","9123456780","0","","2026-01-01"');
   });
 });

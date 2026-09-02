@@ -33,7 +33,7 @@ export default async function AdminCustomersPage() {
             {customers.map((customer) => (
               <tr key={customer.id} className="border-b border-border">
                 <td className="py-2 pr-4 text-foreground">{customer.name ?? "--"}</td>
-                <td className="py-2 pr-4 text-foreground">{customer.email}</td>
+                <td className="py-2 pr-4 text-foreground">{customer.email ?? "--"}</td>
                 <td className="py-2 pr-4 text-foreground">{customer.phone ?? "--"}</td>
                 <td className="py-2 pr-4 text-foreground">{customer.orderCount}</td>
                 <td className="py-2 pr-4 text-foreground">

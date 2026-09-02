@@ -94,7 +94,12 @@ export async function getCheckoutAddressData(): Promise<{ email: string; address
   if (!customerId) return null;
 
   const customer = await db.customer.findUnique({ where: { id: customerId }, select: { email: true } });
-  if (!customer) return null;
+  // A real login session always belongs to a customer with an email (only
+  // a legacy imported contact, see scripts/import-legacy-customers.ts, can
+  // have none, and those have no passwordHash so can never log in) -- but
+  // guard anyway rather than assume, matching this function's existing
+  // null-for-anything-unexpected pattern.
+  if (!customer?.email) return null;
 
   return { email: customer.email, addresses: await listAddressesFor(customerId) };
 }

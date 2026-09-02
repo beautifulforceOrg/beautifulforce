@@ -127,9 +127,17 @@ model Collection {
 }
 
 model Customer {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  name          String?
+  id    String  @id @default(cuid())
+  // Nullable -- a legacy marketing-only contact imported without an
+  // email (see scripts/import-legacy-customers.ts) has neither this nor
+  // a passwordHash, and exists purely as a WhatsApp/phone contact in the
+  // admin customer directory, not a login-capable account.
+  email String? @unique
+  // Nullable and unique for the same reason -- a login-created customer
+  // typically has no phone here directly (see Address.phone instead);
+  // this is populated mainly by the legacy import.
+  phone String? @unique
+  name  String?
   // Null for a customer created only as an order's contact (guest
   // checkout, or created by a webhook) -- account features (login,
   // wishlist) all require this to be set.

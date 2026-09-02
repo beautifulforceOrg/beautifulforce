@@ -11,6 +11,7 @@ const ALLOWLISTED_NO_ROW_EMAIL = "other-admin@example.com";
 async function cleanup() {
   await db.adminUser.deleteMany({ where: { email: { in: [ADMIN_EMAIL, OTHER_EMAIL] } } });
   await db.customer.deleteMany({ where: { email: { in: [ADMIN_EMAIL, OTHER_EMAIL, ALLOWLISTED_NO_ROW_EMAIL] } } });
+  await db.customer.deleteMany({ where: { phone: "9123456780" } });
 }
 
 beforeAll(() => {
@@ -95,5 +96,10 @@ describe("isCustomerAnAdmin", () => {
 
   it("returns false for a customer id that doesn't exist", async () => {
     expect(await isCustomerAnAdmin("does-not-exist")).toBe(false);
+  });
+
+  it("returns false for a legacy phone-only contact with no email", async () => {
+    const customer = await db.customer.create({ data: { phone: "9123456780" } });
+    expect(await isCustomerAnAdmin(customer.id)).toBe(false);
   });
 });

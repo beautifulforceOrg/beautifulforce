@@ -36,7 +36,7 @@ export default async function AccountPage() {
           </button>
         </form>
       </div>
-      <p className="mt-1 text-sm text-muted">{customer.email}</p>
+      <p className="mt-1 text-sm text-muted">{customer.email ?? ""}</p>
       <p className="mt-2 text-sm">
         <Link href="/account/settings" className="text-brand underline">
           Account settings

@@ -95,7 +95,9 @@ export async function destroyAdminSession(): Promise<void> {
  */
 async function findAdminUserForCustomer(customerId: string) {
   const customer = await db.customer.findUnique({ where: { id: customerId }, select: { email: true } });
-  if (!customer) return null;
+  // A legacy imported contact (see scripts/import-legacy-customers.ts) has
+  // no email and thus can never be an admin.
+  if (!customer?.email) return null;
   const email = customer.email.trim().toLowerCase();
   if (!isAllowedAdminEmail(email)) return null;
   return db.adminUser.findUnique({ where: { email } });
