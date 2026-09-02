@@ -2,7 +2,7 @@
 export default function FranchisePage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16 text-sm text-foreground">
-      <h1 className="font-heading mb-2 text-3xl uppercase">Franchise</h1>
+      <h1 className="font-heading mb-2 text-3xl">Franchise</h1>
       <p className="mt-4 font-medium text-foreground">
         Why a Beautiful Mess by Ann franchise? Empower your business with children&apos;s luxury fashion
       </p>
@@ -13,7 +13,7 @@ export default function FranchisePage() {
         redefining kids&apos; fashion.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">Why Franchise With Beautiful Mess?</h2>
+      <h2 className="font-heading mt-6 text-lg">Why Franchise With Beautiful Mess?</h2>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
         <li>
           <strong className="text-foreground">A trusted brand:</strong> established reputation in
@@ -33,7 +33,7 @@ export default function FranchisePage() {
         </li>
       </ul>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">What We Look For</h2>
+      <h2 className="font-heading mt-6 text-lg">What We Look For</h2>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
         <li>Passionate entrepreneurs with a love for children&apos;s fashion</li>
         <li>Strong understanding of retail and customer service</li>
@@ -41,7 +41,7 @@ export default function FranchisePage() {
         <li>A strategic mindset for business growth</li>
       </ul>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">Become a Franchise Partner</h2>
+      <h2 className="font-heading mt-6 text-lg">Become a Franchise Partner</h2>
       <p className="mt-2 text-muted">
         Ready to grow with us? Explore the opportunity to bring Beautiful Mess to your city. Email us at{" "}
         <a href="mailto:beautifulmessbyann@gmail.com" className="text-brand underline">

@@ -23,7 +23,7 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto max-w-md px-6 py-16">
-      <h1 className="font-heading mb-8 text-3xl uppercase text-foreground">Log in</h1>
+      <h1 className="font-heading mb-8 text-3xl text-foreground">Log in</h1>
       <form action={handleSubmit} className="space-y-4">
         <input
           type="email"

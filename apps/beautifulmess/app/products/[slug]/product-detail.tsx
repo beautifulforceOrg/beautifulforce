@@ -46,7 +46,7 @@ function RelatedProductCard({ product }: { product: RelatedProduct }) {
           <Image src={product.images[0].url} alt={product.name} fill sizes="160px" className="object-cover" />
         ) : null}
       </div>
-      <span className="mt-2 block text-center text-xs uppercase text-brand">{product.name}</span>
+      <span className="mt-2 block text-center text-xs text-brand">{product.name}</span>
       <span className="block text-center text-xs text-foreground">{formatPrice(product.price)}</span>
     </Link>
   );
@@ -172,7 +172,7 @@ export function ProductDetail({
             {wishlisted ? "Added to wishlist" : "Add to wishlist"}
           </button>
 
-          <h1 className="font-heading mt-4 text-3xl uppercase text-foreground">{product.name}</h1>
+          <h1 className="font-heading mt-4 text-3xl text-foreground">{product.name}</h1>
           <p className="mt-2 text-lg text-foreground">{formatPrice(product.price)}</p>
           <p className="text-xs text-muted">Taxes included. Shipping calculated at checkout.</p>
 
@@ -192,7 +192,7 @@ export function ProductDetail({
                 }}
               />
               {selectedOutOfStock ? (
-                <p className="mt-2 text-xs font-medium uppercase text-foreground">Sold out in this size</p>
+                <p className="mt-2 text-xs font-medium text-foreground">Sold out in this size</p>
               ) : null}
             </div>
           ) : null}
@@ -206,7 +206,7 @@ export function ProductDetail({
               {isGift ? (
                 <div className="mt-3 space-y-3">
                   <div>
-                    <label htmlFor="gift-recipient-email" className="mb-1 block text-xs uppercase text-muted">
+                    <label htmlFor="gift-recipient-email" className="mb-1 block text-xs text-muted">
                       Recipient&apos;s email
                     </label>
                     <input
@@ -219,7 +219,7 @@ export function ProductDetail({
                     />
                   </div>
                   <div>
-                    <label htmlFor="gift-recipient-name" className="mb-1 block text-xs uppercase text-muted">
+                    <label htmlFor="gift-recipient-name" className="mb-1 block text-xs text-muted">
                       Recipient name (optional)
                     </label>
                     <input
@@ -231,7 +231,7 @@ export function ProductDetail({
                     />
                   </div>
                   <div>
-                    <label htmlFor="gift-message" className="mb-1 block text-xs uppercase text-muted">
+                    <label htmlFor="gift-message" className="mb-1 block text-xs text-muted">
                       Message (optional)
                     </label>
                     <textarea
@@ -250,7 +250,7 @@ export function ProductDetail({
           {/* Real, site-wide notice -- every dress's size chart differs, so
               customers are asked to confirm fit over WhatsApp before
               ordering, given the no-return/no-refund policy. */}
-          <p className="mt-4 text-xs font-medium uppercase text-foreground">
+          <p className="mt-4 text-xs font-medium text-foreground">
             Important notice: every dress has different sizing. Kindly confirm the size on WhatsApp before
             confirming your order, as we have no return or refund.
           </p>
@@ -370,7 +370,7 @@ export function ProductDetail({
 
           {completeTheLook ? (
             <div className="mt-8 border-t border-border pt-6">
-              <h2 className="font-heading mb-4 text-lg uppercase text-foreground">Complete the Look</h2>
+              <h2 className="font-heading mb-4 text-lg text-foreground">Complete the Look</h2>
               <RelatedProductCard product={completeTheLook} />
             </div>
           ) : null}
@@ -380,7 +380,7 @@ export function ProductDetail({
       {youMayAlsoLike.length > 0 ? (
         <section aria-label="You may also like" className="bg-brand py-16 text-brand-foreground">
           <div className="mx-auto max-w-5xl px-6">
-            <h2 className="font-heading mb-8 text-center text-2xl uppercase">You May Also Like</h2>
+            <h2 className="font-heading mb-8 text-center text-2xl">You May Also Like</h2>
             <div className="flex justify-center gap-4 overflow-x-auto">
               {youMayAlsoLike.map((related) => (
                 <div key={related.id} className="rounded-[var(--sf-radius,0.5rem)] bg-background p-3">

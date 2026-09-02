@@ -1,13 +1,13 @@
 export default function TermsOfServicePage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16 text-sm text-foreground">
-      <h1 className="font-heading mb-2 text-3xl uppercase">Terms of Service</h1>
+      <h1 className="font-heading mb-2 text-3xl">Terms of Service</h1>
       <p className="mb-8 text-muted">
         Beautiful Mess, registered to Anitaa Manish, operates from 102 Railway Parallel Road, Bengaluru,
         Karnataka 560020, and designs and sells luxury children&apos;s lifestyle products.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">1. Shipping &amp; Delivery</h2>
+      <h2 className="font-heading mt-6 text-lg">1. Shipping &amp; Delivery</h2>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
         <li>Standard delivery takes 5&ndash;7 working days across India</li>
         <li>Estimated delivery times are provided upon order confirmation</li>
@@ -17,19 +17,19 @@ export default function TermsOfServicePage() {
         </li>
       </ul>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">2. Modifications</h2>
+      <h2 className="font-heading mt-6 text-lg">2. Modifications</h2>
       <p className="mt-2 text-muted">
         Beautiful Mess reserves the right to update these terms without notice. Continued use of the site
         constitutes acceptance of the changes.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">3. Eligibility</h2>
+      <h2 className="font-heading mt-6 text-lg">3. Eligibility</h2>
       <p className="mt-2 text-muted">
         Only individuals capable of forming legally binding contracts may use this site. Users under 18
         require parental or guardian involvement.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">4. User Conduct</h2>
+      <h2 className="font-heading mt-6 text-lg">4. User Conduct</h2>
       <p className="mt-2 text-muted">
         Users must provide accurate information; we may terminate an account if false information is
         discovered. You&apos;ll receive administrative and promotional emails by default and can unsubscribe
@@ -37,7 +37,7 @@ export default function TermsOfServicePage() {
         infringement, and interfering with the site&apos;s network.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">5. Privacy</h2>
+      <h2 className="font-heading mt-6 text-lg">5. Privacy</h2>
       <p className="mt-2 text-muted">
         Personal data is processed in accordance with our{" "}
         <a href="/policies/privacy" className="text-brand underline">
@@ -46,13 +46,13 @@ export default function TermsOfServicePage() {
         .
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">6. Disclaimer of Warranties</h2>
+      <h2 className="font-heading mt-6 text-lg">6. Disclaimer of Warranties</h2>
       <p className="mt-2 text-muted">
         Products are sold at your own risk. Color variations between product images and the actual item may
         occur due to differences between screens.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">9. Transactions &amp; Cancellations</h2>
+      <h2 className="font-heading mt-6 text-lg">9. Transactions &amp; Cancellations</h2>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
         <li>Payment declines are not our responsibility</li>
         <li>Orders may be canceled due to limited inventory, pricing errors, or quality defects</li>
@@ -60,13 +60,13 @@ export default function TermsOfServicePage() {
         <li>Customers bear all applicable taxes, including GST</li>
       </ul>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">10. Customs &amp; International Shipping</h2>
+      <h2 className="font-heading mt-6 text-lg">10. Customs &amp; International Shipping</h2>
       <p className="mt-2 text-muted">
         International delivery takes 15&ndash;30 working days. Customers are responsible for import duties
         assessed at delivery.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">11. Return, Replacement &amp; Refund</h2>
+      <h2 className="font-heading mt-6 text-lg">11. Return, Replacement &amp; Refund</h2>
       <p className="mt-2 text-muted">
         We only make one piece of one size in each style. As such, we do not exchange or refund any
         purchases. See our{" "}
@@ -76,7 +76,7 @@ export default function TermsOfServicePage() {
         for details.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">12. Shipping &amp; Processing Fees</h2>
+      <h2 className="font-heading mt-6 text-lg">12. Shipping &amp; Processing Fees</h2>
       <p className="mt-2 text-muted">
         Regular delivery ranges from ₹100/kg (South India) to ₹150/kg (North India). Express options cost
         ₹200&ndash;250/kg. See our{" "}
@@ -86,7 +86,7 @@ export default function TermsOfServicePage() {
         for the full rate table.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg uppercase">13&ndash;21. Additional Provisions</h2>
+      <h2 className="font-heading mt-6 text-lg">13&ndash;21. Additional Provisions</h2>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
         <li>You agree to indemnify Beautiful Mess against third-party claims arising from your use of the site</li>
         <li>These terms are governed by Indian law, with jurisdiction in Bangalore</li>

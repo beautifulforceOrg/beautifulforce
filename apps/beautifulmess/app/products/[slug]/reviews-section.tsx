@@ -71,7 +71,7 @@ export function ReviewsSection({
 
   return (
     <section className="mx-auto mt-16 max-w-5xl px-6 pb-16" aria-label="Customer reviews">
-      <h2 className="font-heading mb-6 text-center text-2xl uppercase text-foreground">Customer Reviews</h2>
+      <h2 className="font-heading mb-6 text-center text-2xl text-foreground">Customer Reviews</h2>
 
       {summary.count > 0 ? (
         <div className="mb-8 flex flex-col items-center gap-1">
@@ -93,7 +93,7 @@ export function ReviewsSection({
             <li key={review.id} className="border-b border-border pb-6">
               <Stars value={review.rating} />
               <p className="mt-2 text-sm text-foreground">{review.comment}</p>
-              <p className="mt-1 text-xs uppercase tracking-wide text-muted">{review.customer.name ?? "Verified customer"}</p>
+              <p className="mt-1 text-xs font-medium tracking-wide text-muted">{review.customer.name ?? "Verified customer"}</p>
             </li>
           ))}
         </ul>
@@ -104,7 +104,7 @@ export function ReviewsSection({
       ) : (
         <form action={handleSubmit} className="mx-auto max-w-md space-y-3">
           <fieldset>
-            <legend className="mb-2 text-sm font-medium uppercase text-foreground">Your rating</legend>
+            <legend className="mb-2 text-sm font-medium text-foreground">Your rating</legend>
             <div className="flex gap-3">
               {[1, 2, 3, 4, 5].map((n) => (
                 <label key={n} className="flex items-center gap-1 text-sm text-foreground">

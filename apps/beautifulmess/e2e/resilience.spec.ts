@@ -12,6 +12,13 @@ async function fillCheckoutAddress(page: Page) {
 }
 
 test.describe("404 / error states", () => {
+  test("an unknown top-level path shows a branded 404 page, not the framework default", async ({ page }) => {
+    const response = await page.goto("/this-page-does-not-exist");
+    expect(response?.status()).toBe(404);
+    await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Continue shopping" })).toBeVisible();
+  });
+
   test("an unknown product slug shows a real 404, not a crash", async ({ page }) => {
     const response = await page.goto("/products/this-product-does-not-exist-at-all");
     expect(response?.status()).toBe(404);
@@ -19,11 +26,6 @@ test.describe("404 / error states", () => {
 
   test("an unknown collection slug shows a real 404", async ({ page }) => {
     const response = await page.goto("/shop/not-a-real-collection");
-    expect(response?.status()).toBe(404);
-  });
-
-  test("an unknown top-level path shows a real 404", async ({ page }) => {
-    const response = await page.goto("/this-page-does-not-exist");
     expect(response?.status()).toBe(404);
   });
 });

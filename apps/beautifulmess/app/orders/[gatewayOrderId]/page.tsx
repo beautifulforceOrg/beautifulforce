@@ -22,7 +22,7 @@ export default async function OrderStatusPage({
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
-      <h1 className="font-heading mb-8 text-3xl uppercase text-foreground">Order {order.gatewayOrderId}</h1>
+      <h1 className="font-heading mb-8 text-3xl text-foreground">Order {order.gatewayOrderId}</h1>
       <CheckoutSteps steps={STEPS} currentStep={stepForStatus(order.status)} />
       <p className="mt-6 text-foreground" data-testid="order-status">
         Status: {order.status}

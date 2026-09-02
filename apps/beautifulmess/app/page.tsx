@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getCollections, getFeaturedProducts, getWishlistedProductIds } from "../lib/catalog";
 import { CatalogGrid } from "./catalog-grid";
+import { FounderStory } from "./founder-story";
 import { InstagramIcon, StarIcon } from "./icons";
 
 // Icon filenames read directly off the live site's Our Ethos section
@@ -78,7 +79,6 @@ const INSTAGRAM_URL = "https://instagram.com/beautifulmessbyann";
 // (scripts/migrate-images-to-imagekit.ts) rather than hotlinked from the
 // client's Shopify CDN.
 const HERO_IMAGE = "https://ik.imagekit.io/beautifulforce/beautifulmess/WhatsApp_Image_2026-07-09_at_10.00.57.jpg";
-const FOUNDER_IMAGE = "https://ik.imagekit.io/beautifulforce/beautifulmess/WhatsApp_Image_2026-07-09_at_15.23.34.jpg";
 
 // The real site's "shop the look" strip: each tile is a specific product
 // card (verified via each tile's own href on the live site), not a
@@ -157,13 +157,13 @@ export default async function HomePage() {
       </div>
 
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-heading mb-8 text-center text-2xl uppercase text-foreground">Most Loved Products</h2>
+        <h2 className="font-heading mb-8 text-center text-2xl text-foreground">Most Loved Products</h2>
         <CatalogGrid products={products} wishlistedIds={wishlistedIds} />
       </section>
 
       <section className="bg-brand py-16 text-brand-foreground">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-heading mb-10 text-center text-2xl uppercase">Most Searched</h2>
+          <h2 className="font-heading mb-10 text-center text-2xl">Most Searched</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             {collections.map((collection) => (
               <Link key={collection.id} href={`/shop/${collection.slug}`} className="flex flex-col items-center gap-3">
@@ -177,38 +177,18 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-10 px-6 py-16 md:grid-cols-2">
-        <div>
-          <h2 className="font-heading mb-4 text-2xl uppercase text-foreground">Anitaa Manish (Founder)</h2>
-          <p className="text-sm text-muted">
-            Meet Anitaa Manish, the heart and soul behind Beautiful Mess. Anitaa&apos;s journey in fashion began
-            uniquely, initially as a jewelry designer where she developed her keen eye for style and aesthetics.
-          </p>
-          <p className="mt-4 text-sm text-muted">
-            Her passion for children and design inspired her to overcome numerous challenges and pursue her
-            entrepreneurial dream.
-          </p>
-          <p className="mt-4 text-sm text-muted">
-            Fueled by her love for fashion and children, Anitaa founded Beautiful Mess with a vision to blend
-            playful elegance with childhood joy. Her dedication to celebrating each child&apos;s individuality is
-            evident in every stylish, high-quality piece that carries the Beautiful Mess name.
-          </p>
-        </div>
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[var(--sf-radius,0.5rem)]">
-          <Image src={FOUNDER_IMAGE} alt="Anitaa Manish, founder of Beautiful Mess" fill sizes="(min-width: 768px) 40vw, 100vw" className="object-cover" />
-        </div>
-      </section>
+      <FounderStory />
 
       <section className="bg-brand py-16 text-brand-foreground">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-heading mb-10 text-center text-2xl uppercase">Our Ethos</h2>
+          <h2 className="font-heading mb-10 text-center text-2xl">Our Ethos</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             {ETHOS.map((pillar) => (
               <div key={pillar.title} className="text-center">
                 <div className="relative mx-auto mb-3 h-12 w-12">
                   <Image src={pillar.icon} alt="" fill sizes="48px" className="object-contain" />
                 </div>
-                <h3 className="font-heading text-lg uppercase">{pillar.title}</h3>
+                <h3 className="font-heading text-lg">{pillar.title}</h3>
                 <p className="mt-2 text-sm ">{pillar.body}</p>
               </div>
             ))}
@@ -217,7 +197,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-16 text-center">
-        <h2 className="font-heading mb-3 text-2xl uppercase text-foreground">Stay Cute &amp; Stylish</h2>
+        <h2 className="font-heading mb-3 text-2xl text-foreground">Stay Cute &amp; Stylish</h2>
         <a
           href={INSTAGRAM_URL}
           target="_blank"
@@ -244,7 +224,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-4xl px-6 py-16 text-center">
-        <h2 className="font-heading mb-8 text-2xl uppercase text-foreground">As Appreciated On</h2>
+        <h2 className="font-heading mb-8 text-2xl text-foreground">As Appreciated On</h2>
         <div className="flex flex-wrap items-center justify-center gap-10">
           {PRESS_LOGOS.map((src) => (
             <div key={src} className="relative h-10 w-32">
@@ -260,7 +240,7 @@ export default async function HomePage() {
             <StarIcon key={i} className="h-4 w-4" />
           ))}
         </div>
-        <h2 className="font-heading mb-10 text-center text-2xl uppercase text-foreground">Our Motivations</h2>
+        <h2 className="font-heading mb-10 text-center text-2xl text-foreground">Our Motivations</h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {TESTIMONIALS.map((testimonial) => (
             <blockquote key={testimonial.name} className="rounded-[var(--sf-radius,0.5rem)] bg-brand p-6 text-sm text-brand-foreground">
@@ -270,14 +250,14 @@ export default async function HomePage() {
                 ))}
               </div>
               <p>&ldquo;{testimonial.quote}&rdquo;</p>
-              <footer className="mt-3 text-xs uppercase tracking-wide ">{testimonial.name}</footer>
+              <footer className="mt-3 text-xs font-medium tracking-wide ">{testimonial.name}</footer>
             </blockquote>
           ))}
         </div>
       </section>
 
       <section className="mx-auto max-w-3xl px-6 py-16">
-        <h2 className="font-heading mb-8 text-center text-2xl uppercase text-foreground">
+        <h2 className="font-heading mb-8 text-center text-2xl text-foreground">
           Frequently Asked Questions
         </h2>
         <div className="divide-y divide-border border-y border-border">
@@ -296,12 +276,12 @@ export default async function HomePage() {
       <section className="bg-brand py-16 text-brand-foreground">
         <div className="mx-auto grid max-w-6xl gap-8 px-6 sm:grid-cols-2">
           <div>
-            <h2 className="font-heading mb-4 text-2xl uppercase">Bangalore Store</h2>
-            <p className="text-sm font-semibold uppercase">Flagship Store</p>
+            <h2 className="font-heading mb-4 text-2xl">Bangalore Store</h2>
+            <p className="text-sm font-semibold">Flagship Store</p>
             <p className="mt-1 text-sm ">
               102, Railway Parallel Road, 6th Cross, Kumara Park West, Bengaluru, Karnataka 560020
             </p>
-            <p className="mt-4 text-sm font-semibold uppercase">Contact</p>
+            <p className="mt-4 text-sm font-semibold">Contact</p>
             <p className="mt-1 text-sm ">+91 8088339455</p>
             <Link
               href="/help/contact"
@@ -311,7 +291,7 @@ export default async function HomePage() {
             </Link>
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase">Store timing</p>
+            <p className="text-sm font-semibold">Store timing</p>
             <p className="mt-1 text-sm ">12:00PM &ndash; 7:00PM</p>
             <p className="mt-1 text-sm ">Sunday Holiday</p>
           </div>

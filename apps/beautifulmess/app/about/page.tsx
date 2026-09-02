@@ -1,11 +1,14 @@
-// The real About Us page is genuinely this sparse -- just the heading;
-// the founder story lives on the homepage, and the trust-badges band and
-// footer render globally from the root layout. Verified directly (an
-// audit read the real page's full text content), not guessed.
+import { FounderStory } from "../founder-story";
+
+// The real client site's dedicated About Us page has no body copy of its
+// own -- but the real founder story (transcribed from the live site) does
+// exist, just only on the homepage. Reusing that same real content here
+// rather than inventing new brand copy for this page.
 export default function AboutPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="font-heading text-3xl uppercase text-foreground">About Us</h1>
+    <main>
+      <h1 className="font-heading mx-auto max-w-3xl px-6 pt-16 text-3xl text-foreground">About Us</h1>
+      <FounderStory />
     </main>
   );
 }

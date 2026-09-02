@@ -123,7 +123,7 @@ export default function CheckoutPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-      <h1 className="font-heading mb-8 text-3xl uppercase text-foreground">Checkout</h1>
+      <h1 className="font-heading mb-8 text-3xl text-foreground">Checkout</h1>
       <CartSummary lines={lines} />
 
       <div className="mt-6 flex gap-2">
@@ -154,7 +154,7 @@ export default function CheckoutPage() {
         </p>
       ) : null}
 
-      <div className="mt-6 flex items-center justify-between border-t border-border pt-4 text-sm font-medium uppercase text-foreground">
+      <div className="mt-6 flex items-center justify-between border-t border-border pt-4 text-sm font-medium text-foreground">
         <span>Total</span>
         <span>{formatPrice(total)}</span>
       </div>

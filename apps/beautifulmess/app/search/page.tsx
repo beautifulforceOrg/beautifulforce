@@ -11,7 +11,7 @@ export default async function SearchPage({
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
-      <h1 className="font-heading mb-8 text-3xl uppercase text-foreground">Search</h1>
+      <h1 className="font-heading mb-8 text-3xl text-foreground">Search</h1>
       <form action="/search" method="get" className="mb-10 max-w-md">
         <input
           type="search"

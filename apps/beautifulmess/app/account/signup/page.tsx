@@ -23,7 +23,7 @@ export default function SignupPage() {
 
   return (
     <main className="mx-auto max-w-md px-6 py-16">
-      <h1 className="font-heading mb-8 text-3xl uppercase text-foreground">Create an account</h1>
+      <h1 className="font-heading mb-8 text-3xl text-foreground">Create an account</h1>
       <form action={handleSubmit} className="space-y-4">
         <input
           type="text"

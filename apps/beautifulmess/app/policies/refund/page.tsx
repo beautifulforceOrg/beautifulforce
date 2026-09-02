@@ -1,7 +1,7 @@
 export default function RefundPolicyPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16 text-sm text-foreground">
-      <h1 className="font-heading mb-4 text-3xl uppercase">Refund Policy</h1>
+      <h1 className="font-heading mb-4 text-3xl">Refund Policy</h1>
       <p className="text-muted">
         Concerned to protect children&apos;s hygiene and safety, we do not accept returns or exchanges on any
         items. We only make one piece of one size in each style, so we&apos;re unable to exchange or refund

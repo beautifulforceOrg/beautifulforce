@@ -100,7 +100,7 @@ export function CatalogGrid({
                   </span>
                 ) : null}
               </div>
-              <span className="mt-3 block text-center text-sm uppercase text-brand">{product.name}</span>
+              <span className="mt-3 block text-center text-sm text-brand">{product.name}</span>
               <span className="mt-1 block text-center text-sm text-foreground">{formatPrice(product.price)}</span>
             </Link>
           </div>

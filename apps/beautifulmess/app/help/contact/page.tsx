@@ -17,7 +17,7 @@ export default function ContactPage() {
 
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 sm:grid-cols-2">
         <div>
-          <h1 className="font-heading mb-4 text-2xl uppercase text-foreground">Welcome to our flagship store</h1>
+          <h1 className="font-heading mb-4 text-2xl text-foreground">Welcome to our flagship store</h1>
           <p className="text-sm text-muted">{ADDRESS}</p>
 
           <p className="mt-6 text-sm text-foreground">
@@ -33,15 +33,15 @@ export default function ContactPage() {
             </a>
           </p>
 
-          <p className="mt-6 text-sm font-medium uppercase text-foreground">Customer service</p>
+          <p className="mt-6 text-sm font-medium text-foreground">Customer service</p>
           <p className="text-sm text-muted">12 PM to 5 PM · Saturday / Sunday Holiday</p>
 
-          <p className="mt-4 text-sm font-medium uppercase text-foreground">Timings for flagship store</p>
+          <p className="mt-4 text-sm font-medium text-foreground">Timings for flagship store</p>
           <p className="text-sm text-muted">12 PM to 7 PM · Sunday Holiday</p>
         </div>
 
         <div>
-          <h2 className="font-heading mb-4 text-lg uppercase text-foreground">Any queries or feedback</h2>
+          <h2 className="font-heading mb-4 text-lg text-foreground">Any queries or feedback</h2>
           <ContactForm />
         </div>
       </div>

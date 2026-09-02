@@ -6,7 +6,7 @@ export default async function ShopIndexPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
-      <h1 className="font-heading mb-8 text-3xl uppercase text-foreground">Shop</h1>
+      <h1 className="font-heading mb-8 text-3xl text-foreground">Shop</h1>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {collections.map((collection) => (
           <Link

@@ -6,6 +6,10 @@ test.describe("header navigation", () => {
     await page.getByRole("link", { name: "About Us" }).click();
     await expect(page).toHaveURL(/\/about$/);
     await expect(page.getByRole("heading", { name: "About Us" })).toBeVisible();
+    // The page used to be just the heading with no body copy -- it now
+    // carries the real founder story (also shown on the homepage).
+    await expect(page.getByRole("heading", { name: "Anitaa Manish (Founder)" })).toBeVisible();
+    await expect(page.getByText(/Beautiful Mess with a vision to blend/)).toBeVisible();
 
     await page.getByRole("link", { name: "Home" }).click();
     await expect(page).toHaveURL("/");

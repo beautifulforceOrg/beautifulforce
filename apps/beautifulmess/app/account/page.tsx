@@ -27,7 +27,7 @@ export default async function AccountPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-3xl uppercase text-foreground">
+        <h1 className="font-heading text-3xl text-foreground">
           {customer.name ? `Hi, ${customer.name}` : "My Account"}
         </h1>
         <form action={logOut}>
@@ -38,7 +38,7 @@ export default async function AccountPage() {
       </div>
       <p className="mt-1 text-sm text-muted">{customer.email}</p>
 
-      <h2 className="font-heading mb-4 mt-10 text-xl uppercase text-foreground">Order history</h2>
+      <h2 className="font-heading mb-4 mt-10 text-xl text-foreground">Order history</h2>
       {customer.orders.length === 0 ? (
         <p className="text-sm text-muted">
           No orders yet.{" "}
@@ -61,7 +61,7 @@ export default async function AccountPage() {
         </ul>
       )}
 
-      <h2 className="font-heading mb-4 mt-10 text-xl uppercase text-foreground">Wishlist</h2>
+      <h2 className="font-heading mb-4 mt-10 text-xl text-foreground">Wishlist</h2>
       {customer.wishlist.length === 0 ? (
         <p className="text-sm text-muted">Nothing saved yet -- tap the heart on any product to add it here.</p>
       ) : (
@@ -79,7 +79,7 @@ export default async function AccountPage() {
                   />
                 ) : null}
               </div>
-              <span className="mt-2 block text-center text-sm uppercase text-brand">{item.product.name}</span>
+              <span className="mt-2 block text-center text-sm text-brand">{item.product.name}</span>
               <span className="block text-center text-sm text-foreground">{formatPrice(item.product.price)}</span>
             </Link>
           ))}

@@ -35,7 +35,7 @@ export function TrustBadges() {
         {BADGES.map((badge) => (
           <div key={badge.title} className="flex flex-col items-center">
             <badge.icon className="h-10 w-10" />
-            <h2 className="font-heading mt-3 text-sm uppercase">{badge.title}</h2>
+            <h2 className="font-heading mt-3 text-sm">{badge.title}</h2>
             <p className="mt-2 text-xs">{badge.body}</p>
           </div>
         ))}
