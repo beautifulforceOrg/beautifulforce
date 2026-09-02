@@ -1,3 +1,5 @@
+import { withSentryConfig } from "@sentry/nextjs/config";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@storeforge/ui"],
@@ -22,4 +24,14 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Safe with no Sentry account yet: without SENTRY_AUTH_TOKEN, the plugin
+// skips source-map upload entirely (just a local no-op wrapper) rather
+// than failing the build -- verified with a real local production build
+// before this was committed (see docs/pending-actions.md for the
+// one-time account-creation + DSN step this still needs from you).
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+});
