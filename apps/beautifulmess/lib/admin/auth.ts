@@ -68,7 +68,11 @@ export async function createAdminSession(adminUserId: string): Promise<void> {
     createSessionToken(adminUserId, Date.now(), ADMIN_SESSION_MAX_AGE_SECONDS),
     {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      // See lib/auth.ts's createSession for why this checks VERCEL, not
+      // NODE_ENV -- `next start` (this app's own e2e suite) also sets
+      // NODE_ENV=production over plain local HTTP, and a Secure cookie
+      // there is silently refused by Safari/WebKit specifically.
+      secure: process.env.VERCEL === "1",
       sameSite: "lax",
       maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
       path: "/",

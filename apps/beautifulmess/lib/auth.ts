@@ -27,7 +27,14 @@ export async function createSession(customerId: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, createSessionToken(customerId), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    // Keyed on Vercel's own env var, not NODE_ENV -- `next start` also
+    // sets NODE_ENV=production for a real local production build (e.g.
+    // this app's own e2e suite, see playwright.config.ts), which is
+    // plain HTTP on localhost. A Secure cookie there is silently
+    // refused by Safari/WebKit specifically (Chromium/Firefox are
+    // laxer), breaking every login. Every real Vercel deployment is
+    // HTTPS, so this is equivalent in actual production.
+    secure: process.env.VERCEL === "1",
     sameSite: "lax",
     maxAge: SESSION_MAX_AGE_SECONDS,
     path: "/",

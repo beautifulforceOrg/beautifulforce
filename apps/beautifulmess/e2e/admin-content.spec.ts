@@ -36,6 +36,11 @@ test("an admin can add and remove a testimonial and FAQ item, and see it reflect
   await faqSection.getByPlaceholder("Answer").fill(`${marker} answer`);
   await faqSection.getByRole("button", { name: "Add" }).click();
   await expect(faqSection.getByText(`${marker}?`)).toBeVisible();
+  // The Add action's own router.refresh() can still be in flight here --
+  // navigating away immediately can race it (see admin-reviews-contact
+  // .spec.ts/admin-tickets.spec.ts for the same class of bug, first
+  // caught once the e2e suite moved to a production build).
+  await page.waitForLoadState("networkidle");
 
   await page.goto("/");
   await expect(page.getByText(marker, { exact: true })).toBeVisible();

@@ -10,17 +10,6 @@ add an item when it's identified, remove it once it's actually resolved.
 
 ## Technical debt
 
-- **`e2e/storefront-features.spec.ts`'s "filters by price range" test
-  fails deterministically** (confirmed reproducible 3/3 runs, not
-  flaky) — a real bug in either the price-range filter or the test's own
-  assumptions, not yet root-caused.
-- **Admin e2e specs share one fixed `AdminUser` row across every spec
-  file.** Running the full suite with all 3 browser projects in parallel
-  causes intermittent contention/failures across `admin-orders`,
-  `admin-products`, `admin-discounts`, `admin-tickets`,
-  `admin-reviews-contact`, and occasionally `admin-auth` itself — each
-  passes reliably in isolation. Pre-existing, not caused by any single
-  feature.
 - **Catalog data quality** (from the Shopify import, not the code):
   - 8 "Sling Bags" product listings are really only 3 designs in
     different colors — should be 3 products with color variants

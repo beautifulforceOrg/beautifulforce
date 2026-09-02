@@ -36,34 +36,45 @@ test("an admin can create a product with full inventory attributes, add a varian
   await page.waitForURL(/\/admin\/products\/(?!new$)[^/]+$/);
   const productAdminUrl = page.url();
 
-  // Add a variant.
-  await page.getByPlaceholder("Name (e.g. Size)").fill("Size");
-  await page.getByPlaceholder("Value (e.g. M)").fill("M");
-  await page.getByRole("button", { name: "Add variant" }).click();
-  await expect(page.getByText("Size: M")).toBeVisible();
+  // Everything past this point runs inside try/finally: this product is
+  // deliberately published into the real "Frocks" collection at an
+  // unrealistic ₹19.99 to exercise publish/unpublish -- if any assertion
+  // below throws without this, the product leaks into the collection
+  // permanently (local Postgres isn't reset between e2e runs), which is
+  // exactly what corrupted e2e/storefront-features.spec.ts's price-range
+  // filter test days later: the leaked ₹19.99 item inflated the
+  // unfiltered item count but then got excluded once a real minimum price
+  // was applied, making a correct filter look like an off-by-one bug.
+  try {
+    // Add a variant.
+    await page.getByPlaceholder("Name (e.g. Size)").fill("Size");
+    await page.getByPlaceholder("Value (e.g. M)").fill("M");
+    await page.getByRole("button", { name: "Add variant" }).click();
+    await expect(page.getByText("Size: M")).toBeVisible();
 
-  // Assign a collection.
-  await page.getByLabel("Frocks").click();
-  await expect(page.getByLabel("Frocks")).toBeChecked();
+    // Assign a collection.
+    await page.getByLabel("Frocks").click();
+    await expect(page.getByLabel("Frocks")).toBeChecked();
 
-  // Visible on the storefront while published.
-  await page.goto(`/products/${SLUG}`);
-  await expect(page.getByRole("heading", { name: "ADMIN E2E TEST PRODUCT" })).toBeVisible();
-  await page.goto("/shop/frocks");
-  await expect(page.getByText("Admin E2E Test Product").first()).toBeVisible();
+    // Visible on the storefront while published.
+    await page.goto(`/products/${SLUG}`);
+    await expect(page.getByRole("heading", { name: "ADMIN E2E TEST PRODUCT" })).toBeVisible();
+    await page.goto("/shop/frocks");
+    await expect(page.getByText("Admin E2E Test Product").first()).toBeVisible();
 
-  // Unpublish from the admin edit page -- disappears from the storefront.
-  await page.goto(productAdminUrl);
-  await page.getByLabel("Published (visible on the storefront)").uncheck();
-  await page.getByRole("button", { name: "Save changes" }).click();
-  await expect(page.getByText("Saved.")).toBeVisible();
+    // Unpublish from the admin edit page -- disappears from the storefront.
+    await page.goto(productAdminUrl);
+    await page.getByLabel("Published (visible on the storefront)").uncheck();
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByText("Saved.")).toBeVisible();
 
-  const unpublishedResponse = await page.request.get(`/products/${SLUG}`);
-  expect(unpublishedResponse.status()).toBe(404);
-
-  // Clean up -- delete the test product.
-  await page.goto(productAdminUrl);
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Delete product" }).click();
-  await page.waitForURL(/\/admin\/products$/);
+    const unpublishedResponse = await page.request.get(`/products/${SLUG}`);
+    expect(unpublishedResponse.status()).toBe(404);
+  } finally {
+    // Clean up -- delete the test product, even if an assertion above failed.
+    await page.goto(productAdminUrl);
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Delete product" }).click();
+    await page.waitForURL(/\/admin\/products$/);
+  }
 });

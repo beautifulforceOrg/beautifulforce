@@ -26,6 +26,12 @@ test("an admin can delete a review, which disappears from the public product pag
   await page.getByPlaceholder("Share your experience with this product").fill(`Nice! ${marker}`);
   await page.getByRole("button", { name: "Submit review" }).click();
   await expect(page.getByText("You've reviewed this product. Thank you!")).toBeVisible();
+  // The success handler's own router.refresh() can still be in flight
+  // here -- navigating away immediately races it, and the pending
+  // refresh sometimes wins, aborting the new navigation (surfaced as a
+  // real, reproducible failure once the e2e suite moved to a production
+  // build, which is fast enough for this race to matter).
+  await page.waitForLoadState("networkidle");
 
   await loginAsAdmin(page);
   await page.goto("/admin/reviews");
@@ -34,6 +40,7 @@ test("an admin can delete a review, which disappears from the public product pag
   page.once("dialog", (dialog) => dialog.accept());
   await row.getByRole("button", { name: "Delete" }).click();
   await expect(page.getByText("Review deleted.")).toBeVisible();
+  await page.waitForLoadState("networkidle");
 
   await page.goto("/products/black-ruffle-seq-frock");
   await expect(page.getByText(marker)).not.toBeVisible();
@@ -56,6 +63,8 @@ test("an admin can mark a contact message as handled", async ({ page }) => {
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: "Mark handled" }).click();
   await expect(page.getByText("Marked handled.")).toBeVisible();
+  // Same router.refresh()-in-flight race as the review-delete test above.
+  await page.waitForLoadState("networkidle");
 
   await page.goto("/admin/contact");
   await expect(page.getByText(marker)).not.toBeVisible();

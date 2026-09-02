@@ -27,6 +27,7 @@ test("an admin can file a ticket, add a comment, change its status, and see it i
 
   await page.getByLabel("Status").selectOption("IN_PROGRESS");
   await expect(page.getByText("Ticket status updated.")).toBeVisible();
+  await page.waitForLoadState("networkidle");
 
   await page.goto("/admin/tickets");
   await expect(page.getByRole("link", { name: SUBJECT })).toBeVisible();
