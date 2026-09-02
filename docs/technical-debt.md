@@ -35,6 +35,17 @@ add an item when it's identified, remove it once it's actually resolved.
 
 ## Future enhancements (deliberately not built yet)
 
+- **Sentry-driven automated triage** — once Sentry is actually
+  configured (see `docs/pending-actions.md`), a real option worth
+  revisiting: a Sentry Alert Rule webhook could trigger a cloud Claude
+  Code routine (via this session's `RemoteTrigger` tool) that fetches
+  the issue's stack trace/context, investigates the relevant code, and
+  reports a diagnosis or opens a draft PR -- deliberately investigate-
+  and-propose rather than auto-fix-and-deploy, since a wrong automated
+  fix pushed straight to production is worse than the original error.
+  Not built yet: the cost model for cloud-routine execution (vs. a local
+  session) wasn't confirmed before this was deferred -- verify that with
+  Anthropic before committing to the approach.
 - **Abandoned-cart reminders** — blocked on choosing a real email/SMS/
   WhatsApp provider (see `docs/pending-actions.md`) and on the cart
   becoming server-persisted (see Known Limitations below).

@@ -53,16 +53,22 @@ from this list — so everything below is still outstanding.
    needs a real account/subscription with whichever service is chosen,
    which only you can set up.
 
+## Site reliability
+
+8. **Create a free Sentry account** so the site can start reporting
+   real errors instead of them being invisible until someone notices.
+   The code side is already done and does nothing until you have an
+   account — create one at sentry.io (free tier is more than enough for
+   this store's traffic), create a project for this app, and share the
+   two "DSN" values it gives you so they can be added to the site's
+   settings.
+
 ## Catalog cleanup (flagged earlier, not yet actioned)
 
-8. **Merge the duplicate "Sling Bags" listings.** 8 separate product
+9. **Merge the duplicate "Sling Bags" listings.** 8 separate product
    listings are really only 3 bag designs in different colors — should
    become 3 products with color options instead.
-9. **Double check frock/bag pricing.** Every frock is priced the same
-   and every bag is priced the same, regardless of design — worth
-   confirming these are the real intended prices, not import
-   placeholders.
-10. **Clean up outdated shipping information** shown to customers (a
-    product page, the shipping policy page, and the terms page each
-    quote different, outdated shipping costs, and none of them match
-    what's actually charged today).
+10. **Double check frock/bag pricing.** Every frock is priced the same
+    and every bag is priced the same, regardless of design — worth
+    confirming these are the real intended prices, not import
+    placeholders.
