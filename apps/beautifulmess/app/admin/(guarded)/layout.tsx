@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: "/admin/reviews", label: "Reviews" },
   { href: "/admin/contact", label: "Contact" },
   { href: "/admin/tickets", label: "Tickets" },
+  { href: "/admin/content", label: "Content" },
 ];
 
 export default async function AdminGuardedLayout({ children }: { children: ReactNode }) {

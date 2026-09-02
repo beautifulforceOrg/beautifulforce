@@ -340,3 +340,24 @@ model TicketComment {
   body      String
   createdAt DateTime  @default(now())
 }
+
+// Homepage testimonials and FAQ used to be hardcoded arrays in
+// apps/beautifulmess/app/page.tsx -- updating them required a code
+// deploy. Moving them here lets a non-technical store owner manage them
+// from the admin dashboard instead. `position` controls display order
+// (ascending); no drag-and-drop reordering UI yet, just an editable number.
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  quote     String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model FaqItem {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+}

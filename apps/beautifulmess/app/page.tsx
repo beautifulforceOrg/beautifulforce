@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getCollections, getFeaturedProducts, getWishlistedProductIds } from "../lib/catalog";
+import { listFaqItems, listTestimonials } from "../lib/admin/content";
 import { CatalogGrid } from "./catalog-grid";
 import { FounderStory } from "./founder-story";
 import { InstagramIcon, StarIcon } from "./icons";
@@ -29,47 +30,9 @@ const ETHOS = [
 // sitting between the store-info section and the trust badges.
 const ETHOS_WORDS = ["LUXURY", "STYLISH", "COMFORT"];
 
-const TESTIMONIALS = [
-  {
-    name: "Anjali Gautham",
-    quote:
-      "The one stop for all mother's to make daughter Princess. Unique collection and nothing is repeated. From accessories to return favors for your darling Princess.",
-  },
-  {
-    name: "Ashim Lakhpat",
-    quote:
-      "Great place to shop for kids clothes. The folks that own the place are very warm, helpful and knowledgeable. I highly recommend this place.",
-  },
-  {
-    name: "Hitesh Malhotra",
-    quote:
-      "The collection of clothes at this place is very elegant, and stylish. Manish and Anita, the store owners, provided extra care and attention to pick the perfect clothes for the occasion.",
-  },
-  {
-    name: "Pooja Chhajer",
-    quote:
-      "Amazing stylish clothes and accessories, alluring ambiance, My Daughter was loaded with compliments for her dressing from Beautiful Mess.",
-  },
-];
-
-const FAQ = [
-  {
-    q: "What is the return policy?",
-    a: "Concerned to protect children's hygiene and safety, we do not accept returns or exchanges on any items.",
-  },
-  {
-    q: "Can you customise the pieces to size as per body measurements?",
-    a: "We are a pure ready-to-wear brand, but we do offer free alterations.",
-  },
-  {
-    q: "How do we maintain the dresses?",
-    a: "Recommended to dry clean for the first time at least, followed by regular machine wash at home.",
-  },
-  {
-    q: "Do you have an offline store presence?",
-    a: "Yes, our flagship store is at Kumara Park West, Bangalore.",
-  },
-];
+// Testimonials and FAQ used to be hardcoded here -- updating them
+// required a code deploy. They're now managed from /admin/content (see
+// lib/admin/content.ts) and read from the database instead.
 
 const INSTAGRAM_URL = "https://instagram.com/beautifulmessbyann";
 
@@ -116,10 +79,12 @@ const STRIP_PRODUCTS = [
 ];
 
 export default async function HomePage() {
-  const [products, collections, wishlistedIds] = await Promise.all([
+  const [products, collections, wishlistedIds, testimonials, faqItems] = await Promise.all([
     getFeaturedProducts(9),
     getCollections(),
     getWishlistedProductIds(),
+    listTestimonials(),
+    listFaqItems(),
   ]);
 
   return (
@@ -242,8 +207,8 @@ export default async function HomePage() {
         </div>
         <h2 className="font-heading mb-10 text-center text-2xl text-foreground">Our Motivations</h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          {TESTIMONIALS.map((testimonial) => (
-            <blockquote key={testimonial.name} className="rounded-[var(--sf-radius,0.5rem)] bg-brand p-6 text-sm text-brand-foreground">
+          {testimonials.map((testimonial) => (
+            <blockquote key={testimonial.id} className="rounded-[var(--sf-radius,0.5rem)] bg-brand p-6 text-sm text-brand-foreground">
               <div className="mb-3 flex gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <StarIcon key={i} className="h-3 w-3" />
@@ -261,13 +226,13 @@ export default async function HomePage() {
           Frequently Asked Questions
         </h2>
         <div className="divide-y divide-border border-y border-border">
-          {FAQ.map((item) => (
-            <details key={item.q} className="group py-4">
+          {faqItems.map((item) => (
+            <details key={item.id} className="group py-4">
               <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium uppercase text-foreground">
-                {item.q}
+                {item.question}
                 <span className="text-brand transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 text-sm text-muted">{item.a}</p>
+              <p className="mt-3 text-sm text-muted">{item.answer}</p>
             </details>
           ))}
         </div>
