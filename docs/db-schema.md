@@ -80,6 +80,35 @@ erDiagram
     string productId FK
     datetime createdAt
   }
+  Address {
+    string id PK
+    string customerId FK
+    string label
+    string name
+    string phone
+    string addressLine1
+    string addressLine2 "nullable"
+    string city
+    string state
+    string pincode
+    boolean isDefault "default false"
+    datetime createdAt
+  }
+  Cart {
+    string id PK
+    string customerId FK UK "one cart per customer"
+    datetime updatedAt
+  }
+  CartItem {
+    string id PK
+    string cartId FK
+    string productId FK
+    string variantId FK "nullable"
+    int quantity
+    string giftRecipientEmail "nullable"
+    string giftRecipientName "nullable"
+    string giftMessage "nullable"
+  }
   Review {
     string id PK
     string productId FK
@@ -175,6 +204,11 @@ erDiagram
   Customer ||--o{ Order : places
   Customer ||--o{ WishlistItem : saves
   Customer ||--o{ Review : writes
+  Customer ||--o{ Address : saves
+  Customer ||--o| Cart : has
+  Cart ||--o{ CartItem : contains
+  Product ||--o{ CartItem : "in cart as"
+  ProductVariant ||--o{ CartItem : "in cart as (optional)"
   AdminUser ||--o{ Ticket : files
   AdminUser ||--o{ TicketComment : writes
   Ticket ||--o{ TicketComment : has
@@ -191,6 +225,12 @@ erDiagram
   commentary in `docs/architecture.md`.
 - **`NewsletterSubscriber` and `ContactMessage` are standalone** -- both
   forms are anonymous, no account required.
+- **`CartItem` is unique on `(cartId, productId)`** -- one line per
+  product per cart, matching the storefront's own cart UI (which keys by
+  product, not product+variant).
+- **`Order.shipTo*` is a separate, immutable snapshot from `Address`** --
+  an order's shipping fields never change even if the customer later
+  edits or deletes the saved `Address` they were copied from at checkout.
 - Every storefront's Neon database has its own copy of this exact schema
   (isolation model, see `CLAUDE.md`) -- this diagram is the shape shared
   by all of them, not a single shared database.

@@ -183,6 +183,11 @@ erDiagram
   Customer ||--o{ Order : places
   Customer ||--o{ WishlistItem : saves
   Customer ||--o{ Review : writes
+  Customer ||--o{ Address : saves
+  Customer ||--o| Cart : has
+  Cart ||--o{ CartItem : contains
+  Product ||--o{ CartItem : "in cart as"
+  ProductVariant ||--o{ CartItem : "in cart as (optional)"
   NewsletterSubscriber {
     string email
   }
@@ -238,9 +243,32 @@ nullable -- when the Shiprocket integration was completed (diagram 3):
 Shiprocket's `createShipment` API needs a finished destination address
 per order and doesn't collect one itself, so each storefront's checkout
 now collects it (`packages/ui`'s `AddressForm`, backed by Google Places
-Autocomplete) and stores it directly on `Order` rather than a separate
-`Address` model, since nothing reuses a saved address across orders yet.
-See `packages/shipping/README.md`.
+Autocomplete) and stores it directly on `Order` as a point-in-time
+snapshot, separate from the `Address` model below. See
+`packages/shipping/README.md`.
+
+`Address` (multiple per `Customer`, one optionally `isDefault`) is the
+customer's own saved address book (`/account/addresses`), added once a
+single stored address per customer stopped being enough -- checkout now
+lets a returning customer pick a saved address or add a new one
+(`app/checkout/page.tsx`), rather than always retyping. It's deliberately
+separate from `Order.shipTo*`: an `Order`'s shipping fields are a
+snapshot of what was used for that specific shipment (never mutated
+after the fact, even if the customer later edits or deletes the saved
+address it came from), while `Address` rows are live and editable. See
+`apps/beautifulmess/lib/account-settings.ts`.
+
+`Cart`/`CartItem` (one `Cart` per `Customer`, unique on `customerId`)
+persist a logged-in customer's cart server-side instead of only in
+`localStorage`, giving real cross-device continuity and a server record
+of in-progress carts for future abandoned-cart detection. A guest's cart
+still lives in `localStorage` only; `lib/cart-sync.ts`'s
+`saveServerCart` replaces a customer's entire `CartItem` set on every
+change (delete-then-recreate, not a diff) since a cart is always a
+handful of lines, and `lib/cart-context.tsx` merges a guest's local cart
+into the server cart once on login rather than one silently overwriting
+the other. See `apps/beautifulmess/lib/cart-sync.ts` and
+`lib/cart-context.tsx`.
 
 `AdminUser`, `DiscountCode`, `Ticket`/`TicketComment` were added for
 `apps/beautifulmess`'s merchant admin dashboard -- `AdminUser` is kept

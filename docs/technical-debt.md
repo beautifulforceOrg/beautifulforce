@@ -46,9 +46,12 @@ add an item when it's identified, remove it once it's actually resolved.
   Not built yet: the cost model for cloud-routine execution (vs. a local
   session) wasn't confirmed before this was deferred -- verify that with
   Anthropic before committing to the approach.
-- **Abandoned-cart reminders** — blocked on choosing a real email/SMS/
-  WhatsApp provider (see `docs/pending-actions.md`) and on the cart
-  becoming server-persisted (see Known Limitations below).
+- **Abandoned-cart reminders** — the cart is now server-persisted
+  (`Cart`/`CartItem`, see `lib/cart-sync.ts`), so a real record of
+  in-progress carts exists to notice as "abandoned"; still blocked on
+  choosing a real email/SMS/WhatsApp provider (see
+  `docs/pending-actions.md`) and on scheduled/cron job infrastructure
+  (see Known Limitations below) to actually detect and send them.
 - **Extend admin-managed content beyond Testimonials/FAQ** — the
   homepage's Ethos pillars, hero image, Instagram teaser images, and
   press logos are still hardcoded in `app/page.tsx`; the same
@@ -60,8 +63,6 @@ add an item when it's identified, remove it once it's actually resolved.
   no self-service option beyond viewing order status (consistent with
   the storefront's stated no-returns policy, but worth a deliberate
   product decision either way).
-- **Multi-address book** — `Customer` currently stores exactly one saved
-  address (the last one used at checkout), not multiple named addresses.
 - **Real full-text/fuzzy product search** if the catalog grows past what
   substring matching handles well (e.g. Postgres full-text search or a
   hosted search service).
@@ -91,11 +92,6 @@ add an item when it's identified, remove it once it's actually resolved.
   `app/checkout/page.tsx`). The claim has been removed rather than kept
   as a stale promise.
 
-- **The cart is client-side/localStorage only** — never persisted
-  server-side per customer. This means no true cross-device cart
-  continuity, and it's the main blocker for abandoned-cart detection
-  (there's no server record of an in-progress cart to notice as
-  "abandoned").
 - **No password-reset ("forgot password") flow for customers.** Verified
   absent — `lib/account-actions.ts` only supports changing a password
   from within an already-authenticated session
@@ -114,11 +110,12 @@ add an item when it's identified, remove it once it's actually resolved.
   (`scripts/seed-admin-users.ts`) — no self-service admin invite/
   creation UI; adding a new admin requires running a script with direct
   database access.
-- **The admin customer directory's phone number comes from
-  `Customer.addressPhone`**, which is only populated after a customer's
-  first checkout — a signed-up customer who has never ordered has no
-  phone number on file, so they're silently skipped for WhatsApp export
-  purposes.
+- **The admin customer directory's phone number comes from the
+  customer's default saved `Address`** (`lib/admin/customers.ts`), which
+  is only populated after a customer's first checkout or a manual add
+  via `/account/addresses` — a signed-up customer who's never done
+  either has no phone number on file, so they're silently skipped for
+  WhatsApp export purposes.
 - **No error/uptime monitoring** (e.g. Sentry) wired in anywhere —
   production errors are only visible via Vercel's own function logs.
 - **No rate-limiting anywhere in the app** except the admin-login

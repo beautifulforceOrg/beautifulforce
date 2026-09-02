@@ -120,7 +120,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(LOCAL_BUSINESS_JSON_LD) }}
         />
         <ThemeProvider theme={theme}>
-          <CartProvider>
+          <CartProvider isLoggedIn={isLoggedIn}>
             <SiteHeader isLoggedIn={isLoggedIn} isAdmin={isAdmin} />
             {children}
             <TrustBadges />
