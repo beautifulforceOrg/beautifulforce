@@ -30,6 +30,7 @@ export default async function AdminOrdersPage({
         />
         <select
           name="status"
+          aria-label="Filter by status"
           defaultValue={status ?? ""}
           className="rounded-[var(--sf-radius,0.5rem)] border border-border px-3 py-2 text-sm text-foreground"
         >

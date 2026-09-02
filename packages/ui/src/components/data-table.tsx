@@ -32,7 +32,10 @@ export function DataTable<T>({ columns, rows, rowKey, emptyMessage = "Nothing to
                 key={column.header}
                 className={cn("py-2 pr-4 font-medium", column.align === "right" && "text-right")}
               >
-                {column.header}
+                {/* An empty header (this codebase's convention for a
+                    row-actions column) still needs a screen-reader-visible
+                    label -- axe's empty-table-header rule caught this. */}
+                {column.header || <span className="sr-only">Actions</span>}
               </th>
             ))}
           </tr>

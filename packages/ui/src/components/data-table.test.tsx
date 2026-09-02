@@ -33,4 +33,15 @@ describe("DataTable", () => {
 
     expect(screen.getByText("No products yet.")).toBeInTheDocument();
   });
+
+  it("gives an empty header column (the row-actions convention) a screen-reader-only label instead of leaving it blank", () => {
+    const actionColumns: DataTableColumn<Row>[] = [
+      ...columns,
+      { header: "", cell: (row) => <button type="button">Remove {row.name}</button> },
+    ];
+    render(<DataTable columns={actionColumns} rows={rows} rowKey={(row) => row.id} />);
+
+    const headers = screen.getAllByRole("columnheader");
+    expect(headers[2]).toHaveTextContent("Actions");
+  });
 });

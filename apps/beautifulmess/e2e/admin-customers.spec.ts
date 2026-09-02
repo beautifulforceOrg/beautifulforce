@@ -12,9 +12,14 @@ async function loginAsAdmin(page: Page) {
 }
 
 test("an admin can see a real customer in the customer directory and export a CSV", async ({ page }) => {
-  const email = `e2e_admin_customers_${Date.now()}@example.com`;
+  // Local Postgres isn't reset between e2e runs, so a fixed name (unlike
+  // the timestamped email) would collide with a prior run's row --
+  // stamped with the same timestamp to stay unique too.
+  const stamp = Date.now();
+  const email = `e2e_admin_customers_${stamp}@example.com`;
+  const name = `Customers Directory Test ${stamp}`;
   await page.goto("/account/signup");
-  await page.getByPlaceholder("Name").fill("Customers Directory Test");
+  await page.getByPlaceholder("Name").fill(name);
   await page.getByPlaceholder("Email", { exact: true }).fill(email);
   await page.getByPlaceholder(/Password/).fill("correct horse battery");
   await page.getByRole("button", { name: "Create account" }).click();
@@ -24,8 +29,8 @@ test("an admin can see a real customer in the customer directory and export a CS
   await loginAsAdmin(page);
   await page.goto("/admin/customers");
   await expect(page.getByRole("heading", { name: "Customers" })).toBeVisible();
-  await expect(page.getByText(email)).toBeVisible();
-  await expect(page.getByText("Customers Directory Test")).toBeVisible();
+  const row = page.getByRole("row", { name: new RegExp(email) });
+  await expect(row).toContainText(name);
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),

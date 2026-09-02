@@ -101,7 +101,7 @@ export function SiteHeader({ isLoggedIn, isAdmin }: { isLoggedIn: boolean; isAdm
             <MenuIcon className="h-6 w-6 text-foreground" />
           </button>
 
-          <nav className="hidden items-center gap-6 text-sm uppercase tracking-wide text-foreground md:flex">
+          <nav aria-label="Main" className="hidden items-center gap-6 text-sm uppercase tracking-wide text-foreground md:flex">
             <Link href="/">Home</Link>
             {/* Shared `name` makes these two native <details> mutually
                 exclusive -- opening one closes the other, same as the
@@ -189,7 +189,7 @@ export function SiteHeader({ isLoggedIn, isAdmin }: { isLoggedIn: boolean; isAdm
         </div>
 
         {menuOpen ? (
-          <nav className="flex flex-col border-t border-border px-6 py-2 text-sm uppercase tracking-wide text-foreground md:hidden">
+          <nav aria-label="Mobile" className="flex flex-col border-t border-border px-6 py-2 text-sm uppercase tracking-wide text-foreground md:hidden">
             <Link className="py-3" href="/" onClick={() => setMenuOpen(false)}>
               Home
             </Link>

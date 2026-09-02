@@ -24,7 +24,7 @@ export default async function AdminGuardedLayout({ children }: { children: React
       <div className="mx-auto flex min-h-screen max-w-6xl gap-8 px-6 py-10">
         <aside className="w-48 shrink-0">
           <h1 className="font-heading mb-6 text-lg uppercase text-foreground">Store admin</h1>
-          <nav className="flex flex-col gap-2 text-sm">
+          <nav aria-label="Admin" className="flex flex-col gap-2 text-sm">
             {NAV_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className="text-foreground hover:text-brand">
                 {link.label}

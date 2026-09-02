@@ -67,17 +67,20 @@ export function TicketDetailClient({ ticket }: { ticket: Ticket }) {
 
       <section>
         <h3 className="font-heading mb-3 text-lg uppercase text-foreground">Comments</h3>
-        <ul className="mb-4 flex flex-col gap-3">
-          {ticket.comments.map((c) => (
-            <li key={c.id} className="border-b border-border pb-2 text-sm">
-              <p className="font-medium text-foreground">
-                {c.author.email} <span className="font-normal text-muted">— {c.createdAt.toLocaleString()}</span>
-              </p>
-              <p className="text-foreground">{c.body}</p>
-            </li>
-          ))}
-          {ticket.comments.length === 0 ? <p className="text-muted">No comments yet.</p> : null}
-        </ul>
+        {ticket.comments.length === 0 ? (
+          <p className="mb-4 text-muted">No comments yet.</p>
+        ) : (
+          <ul className="mb-4 flex flex-col gap-3">
+            {ticket.comments.map((c) => (
+              <li key={c.id} className="border-b border-border pb-2 text-sm">
+                <p className="font-medium text-foreground">
+                  {c.author.email} <span className="font-normal text-muted">— {c.createdAt.toLocaleString()}</span>
+                </p>
+                <p className="text-foreground">{c.body}</p>
+              </li>
+            ))}
+          </ul>
+        )}
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}

@@ -123,12 +123,15 @@ function VariantsSection({
   return (
     <section>
       <h3 className="font-heading mb-3 text-lg uppercase text-foreground">Variants</h3>
-      <ul className="mb-4 flex flex-col gap-2">
-        {variants.map((variant) => (
-          <VariantRow key={variant.id} productId={productId} variant={variant} onDelete={handleDelete} onChange={onChange} />
-        ))}
-        {variants.length === 0 ? <p className="text-muted">No variants -- sold as a single item.</p> : null}
-      </ul>
+      {variants.length === 0 ? (
+        <p className="mb-4 text-muted">No variants -- sold as a single item.</p>
+      ) : (
+        <ul className="mb-4 flex flex-col gap-2">
+          {variants.map((variant) => (
+            <VariantRow key={variant.id} productId={productId} variant={variant} onDelete={handleDelete} onChange={onChange} />
+          ))}
+        </ul>
+      )}
       <div className="flex flex-wrap items-end gap-2">
         <input placeholder="Name (e.g. Size)" value={name} onChange={(e) => setName(e.target.value)} className="rounded-[var(--sf-radius,0.5rem)] border border-border px-3 py-2 text-sm" />
         <input placeholder="Value (e.g. M)" value={value} onChange={(e) => setValueField(e.target.value)} className="rounded-[var(--sf-radius,0.5rem)] border border-border px-3 py-2 text-sm" />
