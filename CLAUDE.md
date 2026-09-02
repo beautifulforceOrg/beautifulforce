@@ -103,6 +103,22 @@ pricing, etc.).
   (those document how the system *is built*); this file documents what
   *still needs to happen*.
 
+## Technical debt log -- keep it current
+
+`docs/technical-debt.md` is the developer-facing counterpart to
+`docs/pending-actions.md` (which is written for the store owner, in
+plain language). It tracks three things: **technical debt** (real
+shortcuts/known bugs worth fixing), **future enhancements**
+(deliberately deferred features), and **known limitations**
+(architectural facts worth knowing, not necessarily bugs).
+
+- **Whenever a task uncovers or creates one of these**, add it to
+  `docs/technical-debt.md` under the right section before considering
+  the task done. Be specific (name the actual file/function/behavior),
+  not generic.
+- **Whenever a listed item is actually resolved**, delete it from the
+  list rather than marking it done.
+
 ## Vercel plugin -- use it for Vercel-side work
 
 The [Vercel plugin for AI coding agents](https://vercel.com/docs/agent-resources/vercel-plugin)

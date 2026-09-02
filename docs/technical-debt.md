@@ -1,0 +1,113 @@
+# Technical Debt, Future Enhancements & Known Limitations
+
+Developer-facing (unlike `docs/pending-actions.md`, which is the
+plain-language list of things needing the store owner's action). This
+file tracks the engineering side: things worth fixing, building, or at
+least knowing about. Update it the same way as `pending-actions.md` —
+add an item when it's identified, remove it once it's actually resolved.
+
+---
+
+## Technical debt
+
+- **`e2e/storefront-features.spec.ts`'s "filters by price range" test
+  fails deterministically** (confirmed reproducible 3/3 runs, not
+  flaky) — a real bug in either the price-range filter or the test's own
+  assumptions, not yet root-caused.
+- **Admin e2e specs share one fixed `AdminUser` row across every spec
+  file.** Running the full suite with all 3 browser projects in parallel
+  causes intermittent contention/failures across `admin-orders`,
+  `admin-products`, `admin-discounts`, `admin-tickets`,
+  `admin-reviews-contact`, and occasionally `admin-auth` itself — each
+  passes reliably in isolation. Pre-existing, not caused by any single
+  feature.
+- **Catalog data quality** (from the Shopify import, not the code):
+  - 8 "Sling Bags" product listings are really only 3 designs in
+    different colors — should be 3 products with color variants
+    (`ProductVariant` already supports this).
+  - No package weight/dimensions ever imported — every product falls
+    back to `lib/shipping.ts`'s generic constants regardless of what
+    it actually is, undermining the real-weight Shiprocket integration.
+  - All 22 frocks share one price (₹5,500), all 8 bags share another
+    (₹1,500) — never confirmed whether these are real or import
+    placeholders.
+  - Shipping-cost copy is inconsistent across three places (PDP, the
+    shipping policy page, and the terms page each quote different,
+    outdated numbers), none matching what Shiprocket actually charges.
+- **Product descriptions render via `dangerouslySetInnerHTML`**
+  (`product-detail.tsx`) — safe today since the source is trusted
+  first-party CSV content, reviewed for `<script>` tags before this was
+  wired up. Would need real sanitization if the import pipeline ever
+  accepts less-trusted (e.g. merchant-entered) HTML.
+- **Search is a plain case-insensitive substring match** on product name
+  only (`lib/catalog.ts#searchProducts`) — no fuzzy matching, no matching
+  on description/tags/SKU.
+- **`packages/db/prisma/schema.prisma` is a template each storefront
+  manually copies** (per this repo's isolation model) — there's no
+  tooling to detect or propagate schema drift between `apps/beautifulmess`
+  and future storefronts once they diverge.
+
+## Future enhancements (deliberately not built yet)
+
+- **Abandoned-cart reminders** — blocked on choosing a real email/SMS/
+  WhatsApp provider (see `docs/pending-actions.md`) and on the cart
+  becoming server-persisted (see Known Limitations below).
+- **Extend admin-managed content beyond Testimonials/FAQ** — the
+  homepage's Ethos pillars, hero image, Instagram teaser images, and
+  press logos are still hardcoded in `app/page.tsx`; the same
+  `/admin/content` pattern could extend to them.
+- **A real size chart** — the PDP's "Size Chart" accordion just tells
+  customers to confirm on WhatsApp rather than showing actual
+  measurements per product/category.
+- **Customer-facing order cancellation/return-request flow** — currently
+  no self-service option beyond viewing order status (consistent with
+  the storefront's stated no-returns policy, but worth a deliberate
+  product decision either way).
+- **Multi-address book** — `Customer` currently stores exactly one saved
+  address (the last one used at checkout), not multiple named addresses.
+- **Real full-text/fuzzy product search** if the catalog grows past what
+  substring matching handles well (e.g. Postgres full-text search or a
+  hosted search service).
+- **Phone+OTP customer login** — a full plan exists (see the session
+  history / plan file `sorted-swimming-quail.md` if still present) but
+  was never implemented; the web app still uses email+password, and the
+  mobile app has its own separate email+password flow.
+- **Actually sending WhatsApp marketing campaigns** — `/admin/customers`
+  only exports a CSV today; sending campaigns still needs a WhatsApp
+  Business API integration and a real opt-in/consent flow.
+
+## Known limitations
+
+- **The cart is client-side/localStorage only** — never persisted
+  server-side per customer. This means no true cross-device cart
+  continuity, and it's the main blocker for abandoned-cart detection
+  (there's no server record of an in-progress cart to notice as
+  "abandoned").
+- **No password-reset ("forgot password") flow for customers.** Verified
+  absent — `lib/account-actions.ts` only supports changing a password
+  from within an already-authenticated session
+  (`lib/account-settings.ts`). A customer who forgets their password has
+  no self-service recovery today. (Blocked in part by there being no
+  real email-sending infrastructure at all — see next item.)
+- **No real email-sending infrastructure anywhere in the app.**
+  `lib/email.ts` is a validator only, not a sender — no order
+  confirmation emails, no password-reset emails, nothing. Needed before
+  password reset or abandoned-cart reminders can exist.
+- **No scheduled/cron job infrastructure** in this monorepo at all
+  (confirmed: no `vercel.json` crons config, no job-scheduling package)
+  — needed for abandoned-cart detection or any other time-based
+  background task.
+- **Admin accounts are seeded via a CLI script only**
+  (`scripts/seed-admin-users.ts`) — no self-service admin invite/
+  creation UI; adding a new admin requires running a script with direct
+  database access.
+- **The admin customer directory's phone number comes from
+  `Customer.addressPhone`**, which is only populated after a customer's
+  first checkout — a signed-up customer who has never ordered has no
+  phone number on file, so they're silently skipped for WhatsApp export
+  purposes.
+- **No error/uptime monitoring** (e.g. Sentry) wired in anywhere —
+  production errors are only visible via Vercel's own function logs.
+- **No rate-limiting anywhere in the app** except the admin-login
+  failed-attempt lockout — signup, OTP-less login, discount-code
+  application, etc. have no throttling.
