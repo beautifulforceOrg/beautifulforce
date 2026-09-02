@@ -76,6 +76,15 @@ add an item when it's identified, remove it once it's actually resolved.
 
 ## Known limitations
 
+- **The legacy customer import (`scripts/import-legacy-customers.ts`)
+  brought over contact info only, not order history.** 1,598 contacts
+  from the old website are now real `Customer` rows (most phone-only, no
+  password — pure admin-directory/WhatsApp contacts, can't log in), but
+  their historical `Total Orders`/`Total Spent` from the old site were
+  never imported (would require recreating full `Order`/`OrderItem`
+  history against today's product catalog, out of scope for a contact
+  import). The admin customer directory will show 0 orders for all of
+  them even though many really did buy from the old store.
 - **Shipping is currently free in practice** — `lib/checkout.ts` never
   adds a shipping line to the charged amount (`amount = subtotal -
   discount`, nothing else), and the shipping policy/terms/PDP copy now
