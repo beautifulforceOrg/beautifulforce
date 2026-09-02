@@ -1,6 +1,12 @@
 import type { MetadataRoute } from "next";
 import { getCollections, getFeaturedProducts } from "../lib/catalog";
 
+// Otherwise Next.js statically prerenders this route at build time, which
+// needs a live DATABASE_URL -- not available in Vercel's build step here
+// (only at runtime), and this broke the very first production deploy of
+// this file. Rendering per-request instead avoids that entirely.
+export const dynamic = "force-dynamic";
+
 // NEXT_PUBLIC_SITE_URL falls back to the real production Vercel URL --
 // this storefront has no custom domain configured yet (see CLAUDE.md's
 // Isolation section: each storefront gets its own domain eventually).
