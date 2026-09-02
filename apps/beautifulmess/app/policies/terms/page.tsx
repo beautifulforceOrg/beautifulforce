@@ -78,12 +78,11 @@ export default function TermsOfServicePage() {
 
       <h2 className="font-heading mt-6 text-lg">12. Shipping &amp; Processing Fees</h2>
       <p className="mt-2 text-muted">
-        Regular delivery ranges from ₹100/kg (South India) to ₹150/kg (North India). Express options cost
-        ₹200&ndash;250/kg. See our{" "}
+        Shipping is currently free on all orders. See our{" "}
         <a href="/policies/shipping" className="text-brand underline">
           Shipping Policy
         </a>{" "}
-        for the full rate table.
+        for delivery timelines and other details.
       </p>
 
       <h2 className="font-heading mt-6 text-lg">13&ndash;21. Additional Provisions</h2>

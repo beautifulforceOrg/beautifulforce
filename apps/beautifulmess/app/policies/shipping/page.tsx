@@ -9,57 +9,16 @@ export default function ShippingPolicyPage() {
         from our fulfillment center in Jaipur.
       </p>
 
-      <h2 className="font-heading mt-6 text-lg">Shipping charges within India</h2>
+      <h2 className="font-heading mt-6 text-lg">Shipping charges</h2>
       <p className="mt-2 text-muted">
-        <strong className="text-foreground">Standard delivery</strong> (15&ndash;18 days, ready-to-ship): ₹299
-        flat shipping across India.
+        Shipping is currently free on all orders, within India and internationally &mdash; there&apos;s no
+        separate shipping charge added at checkout.
       </p>
-      <p className="mt-2 text-muted">
-        <strong className="text-foreground">Express delivery</strong>, by order value:
-      </p>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
-        <li>Below ₹3,500: ₹399</li>
-        <li>₹3,501 &ndash; ₹8,000: ₹650</li>
-        <li>₹8,001 &ndash; ₹15,000: ₹1,200</li>
-        <li>₹15,001 &ndash; ₹22,000: ₹1,599</li>
-        <li>₹22,001 &ndash; ₹30,000: ₹2,000</li>
-        <li>₹30,001 &ndash; ₹40,000: ₹2,999</li>
-        <li>Above ₹40,001: ₹3,999</li>
-      </ul>
 
       <h2 className="font-heading mt-6 text-lg">International orders</h2>
       <p className="mt-2 text-muted">
-        Standard delivery takes 15&ndash;18 days for ready-to-ship items and custom pieces. International
-        Cash on Delivery is currently unavailable. Please provide a complete physical address &mdash; couriers
-        such as DHL, FedEx, and UPS do not deliver to P.O. boxes.
-      </p>
-
-      <h3 className="mt-4 text-sm font-semibold text-foreground">
-        USA, UK, Australia, New Zealand, Singapore, Hong Kong
-      </h3>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
-        <li>DDU free shipping (15&ndash;18 days), applicable customs/taxes payable on delivery</li>
-        <li>DDP free shipping (25&ndash;28 days): $20 for orders under $250</li>
-      </ul>
-
-      <h3 className="mt-4 text-sm font-semibold text-foreground">UAE, Kuwait, Qatar, Oman</h3>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
-        <li>Below ₹20,000: ₹1,999</li>
-        <li>Above ₹20,000: ₹3,999</li>
-      </ul>
-
-      <h3 className="mt-4 text-sm font-semibold text-foreground">Canada, France, Germany, and others</h3>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
-        <li>Below ₹10,000: ₹2,950</li>
-        <li>Below ₹20,000: ₹4,590</li>
-        <li>Below ₹35,000: ₹6,950</li>
-        <li>Above ₹35,000: ₹8,950</li>
-      </ul>
-
-      <h2 className="font-heading mt-6 text-lg">Cash on delivery (India only)</h2>
-      <p className="mt-2 text-muted">
-        A ₹120 additional charge applies, and a 20% advance payment is required at checkout. If a COD order
-        is refused or returned, the 20% advance and shipping charges are non-refundable.
+        International Cash on Delivery is currently unavailable. Please provide a complete physical address
+        &mdash; couriers such as DHL, FedEx, and UPS do not deliver to P.O. boxes.
       </p>
 
       <h2 className="font-heading mt-6 text-lg">Delivery timelines (from dispatch)</h2>

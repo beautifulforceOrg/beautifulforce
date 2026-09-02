@@ -333,11 +333,11 @@ export function ProductDetail({
               <span className="text-brand transition-transform group-open:rotate-45">+</span>
             </summary>
             <p className="mt-3 text-sm text-muted">
-              Standard delivery: 15&ndash;18 days, ₹299 flat shipping across India. See our{" "}
+              Standard delivery: 15&ndash;18 days, shipping free across India. See our{" "}
               <Link href="/policies/shipping" className="text-brand underline">
                 Shipping Policy
               </Link>{" "}
-              for express rates and international shipping.
+              for international shipping.
             </p>
           </details>
 

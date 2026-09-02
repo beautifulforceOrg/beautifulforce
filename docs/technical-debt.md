@@ -20,9 +20,6 @@ add an item when it's identified, remove it once it's actually resolved.
   - All 22 frocks share one price (₹5,500), all 8 bags share another
     (₹1,500) — never confirmed whether these are real or import
     placeholders.
-  - Shipping-cost copy is inconsistent across three places (PDP, the
-    shipping policy page, and the terms page each quote different,
-    outdated numbers), none matching what Shiprocket actually charges.
 - **Product descriptions render via `dangerouslySetInnerHTML`**
   (`product-detail.tsx`) — safe today since the source is trusted
   first-party CSV content, reviewed for `<script>` tags before this was
@@ -66,6 +63,22 @@ add an item when it's identified, remove it once it's actually resolved.
   Business API integration and a real opt-in/consent flow.
 
 ## Known limitations
+
+- **Shipping is currently free in practice** — `lib/checkout.ts` never
+  adds a shipping line to the charged amount (`amount = subtotal -
+  discount`, nothing else), and the shipping policy/terms/PDP copy now
+  says so explicitly (previously they quoted stale, inconsistent
+  fabricated costs across three separate pages instead). "Have
+  Shiprocket calculate shipping dynamically" is not implemented -- if
+  that's wanted, it needs real design (add a shipping line at checkout
+  sourced from a live Shiprocket rate-check call) before the copy could
+  honestly say costs are calculated automatically.
+- **Cash on delivery was documented but never built.** The old shipping
+  policy page claimed a COD option existed (with a ₹120 charge and 20%
+  advance) -- verified absent from the actual checkout flow entirely
+  (only Razorpay online payment exists, see `lib/checkout.ts`/
+  `app/checkout/page.tsx`). The claim has been removed rather than kept
+  as a stale promise.
 
 - **The cart is client-side/localStorage only** — never persisted
   server-side per customer. This means no true cross-device cart
