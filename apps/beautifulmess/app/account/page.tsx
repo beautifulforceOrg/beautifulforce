@@ -37,6 +37,11 @@ export default async function AccountPage() {
         </form>
       </div>
       <p className="mt-1 text-sm text-muted">{customer.email}</p>
+      <p className="mt-2 text-sm">
+        <Link href="/account/settings" className="text-brand underline">
+          Account settings
+        </Link>
+      </p>
 
       <h2 className="font-heading mb-4 mt-10 text-xl text-foreground">Order history</h2>
       {customer.orders.length === 0 ? (

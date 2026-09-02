@@ -2,8 +2,9 @@
 
 import Script from "next/script";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { AddressForm, CartSummary, formatPrice, type AddressValue } from "@storeforge/ui";
+import { getSavedAddress } from "../../lib/account-actions";
 import { placeOrder } from "../../lib/actions";
 import { useCart } from "../../lib/cart-context";
 import { previewDiscountCode } from "../../lib/discount-actions";
@@ -45,6 +46,16 @@ export default function CheckoutPage() {
   const [discountInput, setDiscountInput] = useState("");
   const [discount, setDiscount] = useState<DiscountResult | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
+
+  // Prefills a returning logged-in customer's last-used address (see
+  // lib/account-settings.ts#getSavedAddressFor) so they don't retype it
+  // every order -- a no-op (getSavedAddress resolves null) for guests or
+  // a customer who's never checked out before.
+  useEffect(() => {
+    getSavedAddress().then((saved) => {
+      if (saved) setAddress(saved);
+    });
+  }, []);
 
   const subtotal = lines.reduce((total, line) => total + line.price * line.quantity, 0);
   const total = discount?.valid ? subtotal - discount.amountOff : subtotal;

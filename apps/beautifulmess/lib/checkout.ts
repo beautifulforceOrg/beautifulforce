@@ -1,6 +1,7 @@
 import { db } from "@storeforge/db";
 import { calculateCartTotal, createRazorpayOrderFromEnv } from "@storeforge/payments";
 import type { AddressValue } from "@storeforge/ui";
+import { saveAddressFor } from "./account-settings";
 import { applyDiscountCode } from "./discount";
 
 export interface CheckoutLine {
@@ -64,6 +65,13 @@ export async function placeOrderFor(
       },
     },
   });
+
+  // Write-through save: a logged-in customer's next checkout is prefilled
+  // from this (see lib/account-actions.ts#getSavedAddress). Best-effort --
+  // never block order placement over this.
+  if (customerId && address) {
+    await saveAddressFor(customerId, address).catch(() => {});
+  }
 
   return { gatewayOrderId, amount, isMocked };
 }

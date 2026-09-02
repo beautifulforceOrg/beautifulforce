@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@storeforge/db";
+import type { AddressValue } from "@storeforge/ui";
+import { changeEmailFor, changePasswordFor, getSavedAddressFor, type SettingsResult } from "./account-settings";
 import { createSession, destroySession, getSessionCustomerId, hashPassword, verifyPassword } from "./auth";
 import { toggleWishlistFor } from "./wishlist";
 
@@ -51,6 +53,30 @@ export async function logIn(formData: FormData): Promise<AuthResult> {
 export async function logOut(): Promise<void> {
   await destroySession();
   redirect("/");
+}
+
+export async function changeEmail(formData: FormData): Promise<SettingsResult> {
+  const customerId = await getSessionCustomerId();
+  if (!customerId) return { error: "You must be logged in." };
+
+  const newEmail = String(formData.get("email") ?? "");
+  const currentPassword = String(formData.get("currentPassword") ?? "");
+  return changeEmailFor(customerId, newEmail, currentPassword);
+}
+
+export async function changePassword(formData: FormData): Promise<SettingsResult> {
+  const customerId = await getSessionCustomerId();
+  if (!customerId) return { error: "You must be logged in." };
+
+  const currentPassword = String(formData.get("currentPassword") ?? "");
+  const newPassword = String(formData.get("newPassword") ?? "");
+  return changePasswordFor(customerId, currentPassword, newPassword);
+}
+
+export async function getSavedAddress(): Promise<AddressValue | null> {
+  const customerId = await getSessionCustomerId();
+  if (!customerId) return null;
+  return getSavedAddressFor(customerId);
 }
 
 export async function toggleWishlist(productId: string): Promise<{ wishlisted: boolean; requiresLogin?: boolean }> {
