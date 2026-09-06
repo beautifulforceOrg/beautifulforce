@@ -44,7 +44,7 @@ the purchase-flow sequence, and one diagram per package/app (schema,
 theming, webhook idempotency, status mapping, the catalog import
 pipeline, CI). It is also published as an Artifact for easier browsing:
 
-**Storeforge Architecture** — https://claude.ai/code/artifact/ab451f96-f18f-4f80-a0d2-68117d2ce1f3
+**Storeforge Architecture** — https://claude.ai/code/artifact/937eff30-472c-4f95-b637-c4c867c11217
 
 **Whenever a change alters something a diagram depicts**, update both
 before considering the task done:
